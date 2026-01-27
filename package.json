@@ -12,6 +12,9 @@
     "url": "https://github.com/SilverAssist/recaptcha/issues"
   },
   "homepage": "https://github.com/SilverAssist/recaptcha#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "recaptcha",
     "recaptcha-v3",

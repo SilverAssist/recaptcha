@@ -49,6 +49,41 @@ npm run build      # Builds CJS + ESM + .d.ts files to dist/
 npm run dev        # Watch mode for development
 ```
 
+## Publishing
+
+Publishing is **automated via GitHub Releases**. The workflow [.github/workflows/publish.yml](.github/workflows/publish.yml) triggers on release creation.
+
+### Release Process
+
+1. **Update version** in [package.json](package.json):
+   ```json
+   { "version": "0.2.0" }
+   ```
+
+2. **Commit and push** the version change:
+   ```bash
+   git add package.json
+   git commit -m "chore: bump version to 0.2.0"
+   git push origin main
+   ```
+
+3. **Create a GitHub Release** (triggers npm publish):
+   ```bash
+   gh release create v0.2.0 --title "v0.2.0" --notes "Release notes here" | cat
+   ```
+
+The workflow runs: `npm ci` → `npm run lint` → `npm run build` → `npm test` → `npm publish`
+
+### Manual Publishing (if needed)
+
+```bash
+npm login                    # Use silverassist org credentials
+npm run prepublishOnly       # clean → lint → build → test
+npm publish --access public
+```
+
+The `publishConfig.access: "public"` in package.json ensures scoped packages (@silverassist/*) publish publicly.
+
 ## Package Exports
 
 The package exposes multiple entry points via `exports` in [package.json](package.json):
