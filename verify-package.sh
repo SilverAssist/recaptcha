@@ -34,8 +34,12 @@ echo ""
 echo "4. ARCHIVOS BUILD"
 echo "-----------------"
 if [ -d "dist" ]; then
-  echo "✅ dist/client/index.js ($(head -1 dist/client/index.js | cut -c1-15)...)"
-  echo "✅ dist/client/index.mjs ($(head -1 dist/client/index.mjs | cut -c1-15)...)"
+  if [ -f "dist/client/index.js" ]; then
+    echo "✅ dist/client/index.js ($(head -1 dist/client/index.js 2>/dev/null | cut -c1-15)...)"
+  fi
+  if [ -f "dist/client/index.mjs" ]; then
+    echo "✅ dist/client/index.mjs ($(head -1 dist/client/index.mjs 2>/dev/null | cut -c1-15)...)"
+  fi
   echo "✅ dist/server/index.js"
   echo "✅ dist/server/index.mjs"
   echo "✅ dist/index.js"
