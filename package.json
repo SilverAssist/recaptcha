@@ -86,7 +86,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node add-use-client.js",
     "dev": "tsup --watch",
     "test": "jest",
     "test:watch": "jest --watch",
