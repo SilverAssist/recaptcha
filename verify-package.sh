@@ -7,14 +7,13 @@ echo ""
 
 echo "1. ESTRUCTURA DE ARCHIVOS"
 echo "-------------------------"
-echo "✅ package.json existe"
-echo "✅ README.md existe"
-echo "✅ LICENSE existe"
-echo "✅ CHANGELOG.md existe"
-echo "✅ tsconfig.json existe"
-echo "✅ jest.config.cjs existe"
-echo "✅ tsup.config.ts existe"
-echo "✅ add-use-client.js existe"
+for file in "package.json" "README.md" "LICENSE" "CHANGELOG.md" "tsconfig.json" "jest.config.cjs" "tsup.config.ts" "add-use-client.js"; do
+  if [ -f "$file" ]; then
+    echo "✅ $file existe"
+  else
+    echo "❌ $file no encontrado"
+  fi
+done
 echo ""
 
 echo "2. CÓDIGO FUENTE"
@@ -36,15 +35,39 @@ echo "-----------------"
 if [ -d "dist" ]; then
   if [ -f "dist/client/index.js" ]; then
     echo "✅ dist/client/index.js ($(head -1 dist/client/index.js 2>/dev/null | cut -c1-15)...)"
+  else
+    echo "❌ dist/client/index.js no encontrado"
   fi
   if [ -f "dist/client/index.mjs" ]; then
     echo "✅ dist/client/index.mjs ($(head -1 dist/client/index.mjs 2>/dev/null | cut -c1-15)...)"
+  else
+    echo "❌ dist/client/index.mjs no encontrado"
   fi
-  echo "✅ dist/server/index.js"
-  echo "✅ dist/server/index.mjs"
-  echo "✅ dist/index.js"
-  echo "✅ dist/index.mjs"
-  echo "✅ TypeScript definitions (.d.ts, .d.mts)"
+  if [ -f "dist/server/index.js" ]; then
+    echo "✅ dist/server/index.js"
+  else
+    echo "❌ dist/server/index.js no encontrado"
+  fi
+  if [ -f "dist/server/index.mjs" ]; then
+    echo "✅ dist/server/index.mjs"
+  else
+    echo "❌ dist/server/index.mjs no encontrado"
+  fi
+  if [ -f "dist/index.js" ]; then
+    echo "✅ dist/index.js"
+  else
+    echo "❌ dist/index.js no encontrado"
+  fi
+  if [ -f "dist/index.mjs" ]; then
+    echo "✅ dist/index.mjs"
+  else
+    echo "❌ dist/index.mjs no encontrado"
+  fi
+  if find dist -type f \( -name "*.d.ts" -o -name "*.d.mts" \) 2>/dev/null | grep -q .; then
+    echo "✅ TypeScript definitions (.d.ts, .d.mts)"
+  else
+    echo "❌ TypeScript definitions (.d.ts, .d.mts) no encontradas"
+  fi
 else
   echo "⚠️  Directorio dist no encontrado (ejecutar 'npm run build')"
 fi
