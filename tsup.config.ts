@@ -14,9 +14,6 @@ export default defineConfig([
     external: ["react", "react-dom", "next"],
     treeshake: true,
     minify: false,
-    banner: {
-      js: '"use client";',
-    },
   },
   // Server and other bundles - no "use client" directive
   {
