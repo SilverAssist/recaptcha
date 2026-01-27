@@ -6,7 +6,7 @@
   "license": "Polyform-Noncommercial-1.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SilverAssist/recaptcha.git"
+    "url": "git+https://github.com/SilverAssist/recaptcha.git"
   },
   "bugs": {
     "url": "https://github.com/SilverAssist/recaptcha/issues"
