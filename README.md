@@ -92,6 +92,100 @@ export async function submitForm(formData: FormData) {
 }
 ```
 
+## ⚠️ Important: Custom FormData
+
+`RecaptchaWrapper` injects a **hidden input field** containing the reCAPTCHA token. If your form handler creates a custom `FormData` object, you must ensure the hidden token is included.
+
+### ❌ This will fail (token is missing):
+
+```tsx
+"use client";
+
+import { RecaptchaWrapper } from "@silverassist/recaptcha";
+
+export function ContactForm() {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // ❌ Creating empty FormData - hidden reCAPTCHA input is NOT included!
+    const formData = new FormData();
+    formData.set("email", "user@example.com");
+    formData.set("message", "Hello");
+    
+    await submitForm(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <RecaptchaWrapper action="contact_form" />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+### ✅ Recommended: Pass form element to capture all inputs
+
+```tsx
+"use client";
+
+import { RecaptchaWrapper } from "@silverassist/recaptcha";
+
+export function ContactForm() {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // ✅ Pass form element - captures ALL inputs including hidden reCAPTCHA token
+    const formData = new FormData(e.currentTarget);
+    
+    await submitForm(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <RecaptchaWrapper action="contact_form" />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+### ✅ Alternative: Start with form element, then modify
+
+```tsx
+"use client";
+
+import { RecaptchaWrapper } from "@silverassist/recaptcha";
+
+export function ContactForm() {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // ✅ Start with form element (includes hidden token)
+    const formData = new FormData(e.currentTarget);
+    
+    // Then add/override specific fields
+    formData.set("customField", "customValue");
+    formData.set("timestamp", Date.now().toString());
+    
+    await submitForm(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <RecaptchaWrapper action="contact_form" />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
 ## API Reference
 
 ### RecaptchaWrapper
