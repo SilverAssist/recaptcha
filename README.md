@@ -102,6 +102,7 @@ export async function submitForm(formData: FormData) {
 "use client";
 
 import { RecaptchaWrapper } from "@silverassist/recaptcha";
+import { submitForm } from "./actions"; // Your server action
 
 export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -132,6 +133,7 @@ export function ContactForm() {
 "use client";
 
 import { RecaptchaWrapper } from "@silverassist/recaptcha";
+import { submitForm } from "./actions"; // Your server action
 
 export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -160,6 +162,7 @@ export function ContactForm() {
 "use client";
 
 import { RecaptchaWrapper } from "@silverassist/recaptcha";
+import { submitForm } from "./actions"; // Your server action
 
 export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
