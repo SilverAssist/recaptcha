@@ -60,6 +60,10 @@ export interface RecaptchaWrapperProps {
   onTokenGenerated?: (token: string) => void;
   /** Callback when an error occurs */
   onError?: (error: Error) => void;
+  /** Enable lazy loading (default: false for backward compatibility) */
+  lazy?: boolean;
+  /** IntersectionObserver rootMargin for lazy loading (default: "200px") */
+  lazyRootMargin?: string;
 }
 
 /**
@@ -98,5 +102,11 @@ declare global {
         options: { action: string }
       ) => Promise<string>;
     };
+    /** Flag to track if reCAPTCHA script has loaded */
+    __recaptchaLoaded?: boolean;
+    /** Flag to track if reCAPTCHA script is currently loading */
+    __recaptchaLoading?: boolean;
+    /** Callbacks to execute when script finishes loading */
+    __recaptchaCallbacks?: Array<() => void>;
   }
 }

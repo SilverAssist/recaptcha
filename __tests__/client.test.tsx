@@ -6,6 +6,29 @@ import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { RecaptchaWrapper } from "../src/client";
 
+// Mock next/script
+jest.mock("next/script", () => {
+  return function Script({
+    src,
+    onLoad,
+    onError: scriptOnError,
+  }: {
+    src: string;
+    onLoad?: () => void;
+    onError?: () => void;
+    strategy?: string;
+  }) {
+    React.useEffect(() => {
+      // Simulate script load after a short delay
+      const timer = setTimeout(() => {
+        if (onLoad) onLoad();
+      }, 0);
+      return () => clearTimeout(timer);
+    }, [onLoad]);
+    return null;
+  };
+});
+
 // Store original env
 const originalEnv = process.env;
 
@@ -113,9 +136,13 @@ describe("RecaptchaWrapper", () => {
 
     render(<RecaptchaWrapper action="contact_form" onError={onError} />);
 
-    await waitFor(() => {
-      expect(onError).toHaveBeenCalledWith(error);
-    });
+    // Wait for the script to load (via setScriptLoaded(true))
+    await waitFor(
+      () => {
+        expect(onError).toHaveBeenCalledWith(error);
+      },
+      { timeout: 2000 }
+    );
   });
 
   it("should execute recaptcha with correct action", async () => {
@@ -172,5 +199,238 @@ describe("RecaptchaWrapper", () => {
 
     expect(clearIntervalSpy).toHaveBeenCalled();
     clearIntervalSpy.mockRestore();
+  });
+
+  describe("Lazy Loading", () => {
+    let mockObserve: jest.Mock;
+    let mockDisconnect: jest.Mock;
+    let mockIntersectionObserver: jest.Mock;
+
+    beforeEach(() => {
+      // Mock IntersectionObserver
+      mockObserve = jest.fn();
+      mockDisconnect = jest.fn();
+      mockIntersectionObserver = jest.fn(function (
+        this: IntersectionObserver
+      ) {
+        return {
+          observe: mockObserve,
+          disconnect: mockDisconnect,
+          unobserve: jest.fn(),
+          takeRecords: jest.fn(),
+          root: null,
+          rootMargin: "",
+          thresholds: [],
+        };
+      });
+
+      (global as any).IntersectionObserver = mockIntersectionObserver;
+
+      // Reset window flags
+      delete (window as any).__recaptchaLoaded;
+      delete (window as any).__recaptchaLoading;
+      delete (window as any).__recaptchaCallbacks;
+    });
+
+    afterEach(() => {
+      delete (global as any).IntersectionObserver;
+    });
+
+    it("should not load script immediately when lazy=true", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      render(<RecaptchaWrapper action="contact_form" lazy />);
+
+      // Script should not be loaded yet
+      await waitFor(() => {
+        expect(mockExecute).not.toHaveBeenCalled();
+      });
+
+      expect(mockObserve).toHaveBeenCalled();
+    });
+
+    it("should set up IntersectionObserver with default root margin", () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      render(<RecaptchaWrapper action="contact_form" lazy />);
+
+      expect(mockIntersectionObserver).toHaveBeenCalledWith(
+        expect.any(Function),
+        { rootMargin: "200px" }
+      );
+    });
+
+    it("should set up IntersectionObserver with custom root margin", () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      render(
+        <RecaptchaWrapper
+          action="contact_form"
+          lazy
+          lazyRootMargin="400px"
+        />
+      );
+
+      expect(mockIntersectionObserver).toHaveBeenCalledWith(
+        expect.any(Function),
+        { rootMargin: "400px" }
+      );
+    });
+
+    it("should load script when element becomes visible", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      // Mock document.head.appendChild to simulate script load
+      const originalAppendChild = document.head.appendChild;
+      document.head.appendChild = jest.fn((script: any) => {
+        // Simulate script load
+        setTimeout(() => {
+          if (script.onload) script.onload();
+        }, 0);
+        return script;
+      }) as any;
+
+      render(<RecaptchaWrapper action="contact_form" lazy />);
+
+      // Verify IntersectionObserver was set up
+      expect(mockObserve).toHaveBeenCalled();
+
+      // Get the observer instance and callback
+      const observerInstance = mockIntersectionObserver.mock.instances[0];
+      const observerCallback = mockIntersectionObserver.mock.calls[0][0];
+
+      // Simulate intersection
+      act(() => {
+        observerCallback([{ isIntersecting: true }], observerInstance);
+      });
+
+      // Script should be loaded now
+      await waitFor(() => {
+        expect(mockExecute).toHaveBeenCalledWith("test-site-key", {
+          action: "contact_form",
+        });
+      });
+
+      expect(mockDisconnect).toHaveBeenCalled();
+
+      // Restore
+      document.head.appendChild = originalAppendChild;
+    });
+
+    it("should not load script when element is not intersecting", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      render(<RecaptchaWrapper action="contact_form" lazy />);
+
+      // Verify IntersectionObserver was set up
+      expect(mockObserve).toHaveBeenCalled();
+
+      // Get the observer instance and callback
+      const observerInstance = mockIntersectionObserver.mock.instances[0];
+      const observerCallback = mockIntersectionObserver.mock.calls[0][0];
+
+      // Simulate non-intersection
+      act(() => {
+        observerCallback([{ isIntersecting: false }], observerInstance);
+      });
+
+      // Script should not be loaded
+      await waitFor(() => {
+        expect(mockExecute).not.toHaveBeenCalled();
+      });
+
+      expect(mockDisconnect).not.toHaveBeenCalled();
+    });
+
+    it("should not set up IntersectionObserver when lazy=false", () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      render(<RecaptchaWrapper action="contact_form" lazy={false} />);
+
+      expect(mockIntersectionObserver).not.toHaveBeenCalled();
+    });
+
+    it("should clean up IntersectionObserver on unmount", () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      const { unmount } = render(<RecaptchaWrapper action="contact_form" lazy />);
+
+      expect(mockObserve).toHaveBeenCalled();
+
+      unmount();
+
+      expect(mockDisconnect).toHaveBeenCalled();
+    });
+  });
+
+  describe("Singleton Script Loading", () => {
+    beforeEach(() => {
+      // Reset window flags
+      delete (window as any).__recaptchaLoaded;
+      delete (window as any).__recaptchaLoading;
+      delete (window as any).__recaptchaCallbacks;
+
+      // Mock document.head.appendChild
+      document.head.appendChild = jest.fn((script: any) => {
+        // Simulate script load
+        setTimeout(() => {
+          if (script.onload) script.onload();
+        }, 0);
+        return script;
+      });
+    });
+
+    it("should only load script once for multiple components in lazy mode", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      // Mock IntersectionObserver to auto-trigger intersection
+      let observerCallbacks: Array<IntersectionObserverCallback> = [];
+      (global as any).IntersectionObserver = jest.fn(function (
+        this: IntersectionObserver,
+        callback: IntersectionObserverCallback
+      ) {
+        observerCallbacks.push(callback);
+        setTimeout(() => {
+          callback(
+            [{ isIntersecting: true } as IntersectionObserverEntry],
+            this
+          );
+        }, 0);
+        return {
+          observe: jest.fn(),
+          disconnect: jest.fn(),
+          unobserve: jest.fn(),
+          takeRecords: jest.fn(),
+          root: null,
+          rootMargin: "",
+          thresholds: [],
+        };
+      });
+
+      const appendChildSpy = jest.spyOn(document.head, "appendChild");
+
+      // Render multiple components
+      render(
+        <>
+          <RecaptchaWrapper action="form1" lazy />
+          <RecaptchaWrapper action="form2" lazy />
+          <RecaptchaWrapper action="form3" lazy />
+        </>
+      );
+
+      // Wait for script to load
+      await waitFor(() => {
+        expect(window.__recaptchaLoaded).toBe(true);
+      });
+
+      // Script should be appended only once
+      const scriptCalls = appendChildSpy.mock.calls.filter(
+        (call) => call[0].tagName === "SCRIPT"
+      );
+      expect(scriptCalls.length).toBe(1);
+
+      appendChildSpy.mockRestore();
+      delete (global as any).IntersectionObserver;
+    });
   });
 });

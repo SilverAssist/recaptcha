@@ -11,9 +11,58 @@
 "use client";
 
 import Script from "next/script";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RecaptchaWrapperProps } from "../types";
 import { RECAPTCHA_CONFIG } from "../constants";
+
+/**
+ * Load reCAPTCHA script manually (singleton pattern)
+ * Ensures script is only loaded once globally
+ */
+function loadRecaptchaScript(
+  siteKey: string,
+  onLoad: () => void,
+  onError: (error: Error) => void
+): void {
+  // Already loaded
+  if (typeof window !== "undefined" && window.__recaptchaLoaded) {
+    onLoad();
+    return;
+  }
+
+  // Currently loading - add callback
+  if (typeof window !== "undefined" && window.__recaptchaLoading) {
+    window.__recaptchaCallbacks = window.__recaptchaCallbacks || [];
+    window.__recaptchaCallbacks.push(onLoad);
+    return;
+  }
+
+  // Start loading
+  if (typeof window !== "undefined") {
+    window.__recaptchaLoading = true;
+    window.__recaptchaCallbacks = [];
+
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
+    script.async = true;
+
+    script.onload = () => {
+      window.__recaptchaLoaded = true;
+      window.__recaptchaLoading = false;
+      onLoad();
+      window.__recaptchaCallbacks?.forEach((cb) => cb());
+      window.__recaptchaCallbacks = [];
+    };
+
+    script.onerror = () => {
+      window.__recaptchaLoading = false;
+      const error = new Error("Failed to load reCAPTCHA script");
+      onError(error);
+    };
+
+    document.head.appendChild(script);
+  }
+}
 
 /**
  * RecaptchaWrapper - Client component for reCAPTCHA v3 integration
@@ -24,6 +73,7 @@ import { RECAPTCHA_CONFIG } from "../constants";
  * - Refreshes token periodically (tokens expire after 2 minutes)
  * - Stores token in hidden input field for form submission
  * - Graceful fallback when not configured
+ * - Lazy loading support to defer script loading until visible
  *
  * @example Basic usage
  * ```tsx
@@ -51,6 +101,16 @@ import { RECAPTCHA_CONFIG } from "../constants";
  *   onError={(error) => console.error("Error:", error)}
  * />
  * ```
+ *
+ * @example Lazy loading for better performance
+ * ```tsx
+ * <RecaptchaWrapper action="contact_form" lazy />
+ * ```
+ *
+ * @example Lazy loading with custom root margin
+ * ```tsx
+ * <RecaptchaWrapper action="contact_form" lazy lazyRootMargin="400px" />
+ * ```
  */
 export function RecaptchaWrapper({
   action,
@@ -60,11 +120,16 @@ export function RecaptchaWrapper({
   refreshInterval = RECAPTCHA_CONFIG.tokenRefreshInterval,
   onTokenGenerated,
   onError,
+  lazy = false,
+  lazyRootMargin = "200px",
 }: RecaptchaWrapperProps) {
   // Use prop siteKey or fall back to environment variable
   const siteKey = propSiteKey ?? process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const tokenInputRef = useRef<HTMLInputElement>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(!lazy); // If not lazy, start visible
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   // Execute reCAPTCHA and store token
   const executeRecaptcha = useCallback(async () => {
@@ -103,10 +168,48 @@ export function RecaptchaWrapper({
     }
   }, [siteKey, action, onTokenGenerated, onError]);
 
+  // IntersectionObserver for lazy loading
+  useEffect(() => {
+    if (!lazy || !containerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: lazyRootMargin }
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [lazy, lazyRootMargin]);
+
+  // Load script when visible (or immediately if not lazy)
+  useEffect(() => {
+    if (!siteKey) return;
+    if (lazy && !isVisible) return;
+
+    const handleLoad = () => {
+      setScriptLoaded(true);
+      executeRecaptcha();
+    };
+
+    const handleError = (error: Error) => {
+      console.error("[reCAPTCHA] Failed to load reCAPTCHA script");
+      if (onError) {
+        onError(error);
+      }
+    };
+
+    loadRecaptchaScript(siteKey, handleLoad, handleError);
+  }, [siteKey, lazy, isVisible, executeRecaptcha, onError]);
+
   // Set up token refresh interval (tokens expire after 2 minutes)
   useEffect(() => {
-    // Generate token immediately when component mounts
-    executeRecaptcha();
+    // Only set up refresh if script is loaded
+    if (!scriptLoaded) return;
 
     // Set up refresh interval
     refreshIntervalRef.current = setInterval(() => {
@@ -119,7 +222,7 @@ export function RecaptchaWrapper({
         clearInterval(refreshIntervalRef.current);
       }
     };
-  }, [executeRecaptcha, refreshInterval]);
+  }, [scriptLoaded, executeRecaptcha, refreshInterval]);
 
   // Don't render anything if site key is not configured
   if (!siteKey) {
@@ -132,7 +235,7 @@ export function RecaptchaWrapper({
   }
 
   return (
-    <>
+    <div ref={containerRef} style={{ display: "contents" }}>
       {/* Hidden input to store the token */}
       <input
         ref={tokenInputRef}
@@ -142,21 +245,24 @@ export function RecaptchaWrapper({
         data-testid="recaptcha-token-input"
       />
 
-      {/* Load reCAPTCHA script */}
-      <Script
-        src={`https://www.google.com/recaptcha/api.js?render=${siteKey}`}
-        strategy="afterInteractive"
-        onLoad={() => {
-          executeRecaptcha();
-        }}
-        onError={() => {
-          console.error("[reCAPTCHA] Failed to load reCAPTCHA script");
-          if (onError) {
-            onError(new Error("Failed to load reCAPTCHA script"));
-          }
-        }}
-      />
-    </>
+      {/* Load reCAPTCHA script using Next.js Script component for non-lazy mode */}
+      {!lazy && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${siteKey}`}
+          strategy="afterInteractive"
+          onLoad={() => {
+            setScriptLoaded(true);
+            executeRecaptcha();
+          }}
+          onError={() => {
+            console.error("[reCAPTCHA] Failed to load reCAPTCHA script");
+            if (onError) {
+              onError(new Error("Failed to load reCAPTCHA script"));
+            }
+          }}
+        />
+      )}
+    </div>
   );
 }
 
