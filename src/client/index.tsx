@@ -257,6 +257,11 @@ export function RecaptchaWrapper({
           src={`https://www.google.com/recaptcha/api.js?render=${siteKey}`}
           strategy="afterInteractive"
           onLoad={() => {
+            // Mark script as loaded globally for singleton behavior
+            if (typeof window !== "undefined") {
+              window.__recaptchaLoaded = true;
+              window.__recaptchaLoading = false;
+            }
             setScriptLoaded(true);
             executeRecaptcha();
           }}

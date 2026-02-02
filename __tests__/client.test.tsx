@@ -19,11 +19,11 @@ jest.mock("next/script", () => {
     strategy?: string;
   }) {
     React.useEffect(() => {
-      // Simulate script load after a short delay
-      const timer = setTimeout(() => {
-        if (onLoad) onLoad();
-      }, 0);
-      return () => clearTimeout(timer);
+      // Use queueMicrotask to simulate async script load without timers
+      // This works correctly with fake timers
+      if (onLoad) {
+        queueMicrotask(() => onLoad());
+      }
     }, [onLoad]);
     return null;
   };
@@ -527,6 +527,63 @@ describe("RecaptchaWrapper", () => {
       });
 
       // Script should NOT be appended again
+      const scriptCalls = appendChildSpy.mock.calls.filter(
+        (call) => call[0].tagName === "SCRIPT"
+      );
+      expect(scriptCalls.length).toBe(0);
+
+      appendChildSpy.mockRestore();
+      delete (global as any).IntersectionObserver;
+    });
+
+    it("should maintain singleton behavior when mixing lazy and non-lazy instances", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      // Mock IntersectionObserver
+      const mockObserve = jest.fn();
+      const mockDisconnect = jest.fn();
+      (global as any).IntersectionObserver = jest.fn(function () {
+        return {
+          observe: mockObserve,
+          disconnect: mockDisconnect,
+          unobserve: jest.fn(),
+          takeRecords: jest.fn(),
+          root: null,
+          rootMargin: "",
+          thresholds: [],
+        };
+      });
+
+      const appendChildSpy = jest.spyOn(document.head, "appendChild");
+
+      // Render both non-lazy and lazy instances
+      const { rerender } = render(
+        <>
+          <RecaptchaWrapper action="hero_form" />
+          <RecaptchaWrapper action="footer_form" lazy />
+        </>
+      );
+
+      // Wait for non-lazy script to load (via Next.js Script)
+      await waitFor(() => {
+        expect(window.__recaptchaLoaded).toBe(true);
+      });
+
+      // Get the observer instance and callback
+      const IntersectionObserverMock = (global as any).IntersectionObserver;
+      const observerCallback = IntersectionObserverMock.mock.calls[0][0];
+
+      // Simulate lazy instance becoming visible
+      act(() => {
+        observerCallback([{ isIntersecting: true }], {});
+      });
+
+      // Wait for lazy instance to attempt loading
+      await waitFor(() => {
+        expect(mockExecute).toHaveBeenCalled();
+      });
+
+      // Script should NOT be appended again (Next.js Script handles the first load)
       const scriptCalls = appendChildSpy.mock.calls.filter(
         (call) => call[0].tagName === "SCRIPT"
       );
