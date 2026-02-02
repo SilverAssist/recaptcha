@@ -107,6 +107,9 @@ declare global {
     /** Flag to track if reCAPTCHA script is currently loading */
     __recaptchaLoading?: boolean;
     /** Callbacks to execute when script finishes loading */
-    __recaptchaCallbacks?: Array<() => void>;
+    __recaptchaCallbacks?: Array<{
+      onLoad: () => void;
+      onError: (error: Error) => void;
+    }>;
   }
 }

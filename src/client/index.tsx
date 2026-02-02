@@ -30,10 +30,10 @@ function loadRecaptchaScript(
     return;
   }
 
-  // Currently loading - add callback
+  // Currently loading - add callbacks
   if (typeof window !== "undefined" && window.__recaptchaLoading) {
     window.__recaptchaCallbacks = window.__recaptchaCallbacks || [];
-    window.__recaptchaCallbacks.push(onLoad);
+    window.__recaptchaCallbacks.push({ onLoad, onError });
     return;
   }
 
@@ -50,7 +50,7 @@ function loadRecaptchaScript(
       window.__recaptchaLoaded = true;
       window.__recaptchaLoading = false;
       onLoad();
-      window.__recaptchaCallbacks?.forEach((cb) => cb());
+      window.__recaptchaCallbacks?.forEach((cb) => cb.onLoad());
       window.__recaptchaCallbacks = [];
     };
 
@@ -59,7 +59,7 @@ function loadRecaptchaScript(
       const error = new Error("Failed to load reCAPTCHA script");
       onError(error);
       // Notify all queued callbacks about the failure
-      window.__recaptchaCallbacks?.forEach((cb) => cb());
+      window.__recaptchaCallbacks?.forEach((cb) => cb.onError(error));
       window.__recaptchaCallbacks = [];
     };
 
@@ -276,6 +276,9 @@ export function RecaptchaWrapper({
             if (typeof window !== "undefined") {
               window.__recaptchaLoaded = true;
               window.__recaptchaLoading = false;
+              // Flush all queued callbacks from lazy instances
+              window.__recaptchaCallbacks?.forEach((cb) => cb.onLoad());
+              window.__recaptchaCallbacks = [];
             }
             setScriptLoaded(true);
             executeRecaptcha();
@@ -284,6 +287,10 @@ export function RecaptchaWrapper({
             // Mark loading as complete on error
             if (typeof window !== "undefined") {
               window.__recaptchaLoading = false;
+              // Notify all queued callbacks about the failure
+              const error = new Error("Failed to load reCAPTCHA script");
+              window.__recaptchaCallbacks?.forEach((cb) => cb.onError(error));
+              window.__recaptchaCallbacks = [];
             }
             console.error("[reCAPTCHA] Failed to load reCAPTCHA script");
             if (onError) {
