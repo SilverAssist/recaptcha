@@ -58,6 +58,9 @@ function loadRecaptchaScript(
       window.__recaptchaLoading = false;
       const error = new Error("Failed to load reCAPTCHA script");
       onError(error);
+      // Notify all queued callbacks about the failure
+      window.__recaptchaCallbacks?.forEach((cb) => cb());
+      window.__recaptchaCallbacks = [];
     };
 
     document.head.appendChild(script);
@@ -186,6 +189,18 @@ export function RecaptchaWrapper({
     return () => observer.disconnect();
   }, [lazy, lazyRootMargin]);
 
+  // Mark loading flag for non-lazy mode to prevent duplicate loads
+  useEffect(() => {
+    if (!siteKey) return;
+    if (lazy) return; // Only for non-lazy mode
+
+    // Set loading flag before Script component loads
+    if (typeof window !== "undefined" && !window.__recaptchaLoaded && !window.__recaptchaLoading) {
+      window.__recaptchaLoading = true;
+      window.__recaptchaCallbacks = window.__recaptchaCallbacks || [];
+    }
+  }, [siteKey, lazy]);
+
   // Load script when visible (only for lazy mode)
   useEffect(() => {
     if (!siteKey) return;
@@ -266,6 +281,10 @@ export function RecaptchaWrapper({
             executeRecaptcha();
           }}
           onError={() => {
+            // Mark loading as complete on error
+            if (typeof window !== "undefined") {
+              window.__recaptchaLoading = false;
+            }
             console.error("[reCAPTCHA] Failed to load reCAPTCHA script");
             if (onError) {
               onError(new Error("Failed to load reCAPTCHA script"));

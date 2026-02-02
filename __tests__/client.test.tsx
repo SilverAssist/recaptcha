@@ -557,7 +557,7 @@ describe("RecaptchaWrapper", () => {
       const appendChildSpy = jest.spyOn(document.head, "appendChild");
 
       // Render both non-lazy and lazy instances
-      const { rerender } = render(
+      render(
         <>
           <RecaptchaWrapper action="hero_form" />
           <RecaptchaWrapper action="footer_form" lazy />
