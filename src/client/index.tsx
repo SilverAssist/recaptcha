@@ -175,6 +175,13 @@ export function RecaptchaWrapper({
   useEffect(() => {
     if (!lazy || !containerRef.current) return;
 
+    // Fallback to eager loading if IntersectionObserver is not supported
+    // (older browsers, some SSR/test environments)
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

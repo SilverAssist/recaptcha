@@ -6,6 +6,9 @@ import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { RecaptchaWrapper } from "../src/client";
 
+// Control variable to simulate script load error
+let simulateScriptError = false;
+
 // Mock next/script
 jest.mock("next/script", () => {
   return function Script({
@@ -21,13 +24,22 @@ jest.mock("next/script", () => {
     React.useEffect(() => {
       // Use queueMicrotask to simulate async script load without timers
       // This works correctly with fake timers
-      if (onLoad) {
+      if (simulateScriptError) {
+        if (scriptOnError) {
+          queueMicrotask(() => scriptOnError());
+        }
+      } else if (onLoad) {
         queueMicrotask(() => onLoad());
       }
-    }, [onLoad]);
+    }, [onLoad, scriptOnError]);
     return null;
   };
 });
+
+// Export setter for tests
+export const setSimulateScriptError = (value: boolean) => {
+  simulateScriptError = value;
+};
 
 // Store original env
 const originalEnv = process.env;
@@ -39,6 +51,9 @@ const mockReady = jest.fn((callback: () => void) => callback());
 beforeEach(() => {
   jest.resetModules();
   process.env = { ...originalEnv };
+
+  // Reset script error simulation
+  simulateScriptError = false;
 
   // Reset mocks
   mockExecute.mockClear();
@@ -201,6 +216,80 @@ describe("RecaptchaWrapper", () => {
     clearIntervalSpy.mockRestore();
   });
 
+  describe("Non-lazy Script Error Handling", () => {
+    beforeEach(() => {
+      // Reset window flags
+      delete (window as any).__recaptchaLoaded;
+      delete (window as any).__recaptchaLoading;
+      delete (window as any).__recaptchaCallbacks;
+    });
+
+    afterEach(() => {
+      simulateScriptError = false;
+    });
+
+    it("should call onError callback when non-lazy Script fails to load", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+      const onError = jest.fn();
+
+      // Enable script error simulation
+      simulateScriptError = true;
+
+      render(<RecaptchaWrapper action="contact_form" onError={onError} />);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: "Failed to load reCAPTCHA script",
+          })
+        );
+      });
+    });
+
+    it("should clear __recaptchaLoading flag on script error", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      // Set up loading flag
+      (window as any).__recaptchaLoading = true;
+
+      // Enable script error simulation
+      simulateScriptError = true;
+
+      render(<RecaptchaWrapper action="contact_form" />);
+
+      await waitFor(() => {
+        expect(window.__recaptchaLoading).toBe(false);
+      });
+    });
+
+    it("should notify queued callbacks on script error", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+      const queuedOnError = jest.fn();
+
+      // Set up a queued callback (simulating a lazy instance waiting)
+      (window as any).__recaptchaLoading = true;
+      (window as any).__recaptchaCallbacks = [
+        { onLoad: jest.fn(), onError: queuedOnError },
+      ];
+
+      // Enable script error simulation
+      simulateScriptError = true;
+
+      render(<RecaptchaWrapper action="contact_form" />);
+
+      await waitFor(() => {
+        expect(queuedOnError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: "Failed to load reCAPTCHA script",
+          })
+        );
+      });
+
+      // Callbacks array should be cleared
+      expect(window.__recaptchaCallbacks).toEqual([]);
+    });
+  });
+
   describe("Lazy Loading", () => {
     let mockObserve: jest.Mock;
     let mockDisconnect: jest.Mock;
@@ -234,6 +323,34 @@ describe("RecaptchaWrapper", () => {
 
     afterEach(() => {
       delete (global as any).IntersectionObserver;
+    });
+
+    it("should fallback to eager loading when IntersectionObserver is not supported", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      // Remove IntersectionObserver to simulate unsupported environment
+      delete (global as any).IntersectionObserver;
+
+      // Mock document.head.appendChild for lazy script loading
+      const originalAppendChild = document.head.appendChild;
+      document.head.appendChild = jest.fn((script: any) => {
+        setTimeout(() => {
+          if (script.onload) script.onload();
+        }, 0);
+        return script;
+      }) as any;
+
+      render(<RecaptchaWrapper action="contact_form" lazy />);
+
+      // Should load script immediately (fallback to eager) and execute
+      await waitFor(() => {
+        expect(mockExecute).toHaveBeenCalledWith("test-site-key", {
+          action: "contact_form",
+        });
+      });
+
+      // Restore
+      document.head.appendChild = originalAppendChild;
     });
 
     it("should not load script immediately when lazy=true", async () => {
