@@ -236,6 +236,11 @@ export function RecaptchaWrapper({
 
   return (
     <div ref={containerRef} style={{ display: "contents" }}>
+      {/* 
+        Note: display: contents makes this wrapper transparent to the DOM layout.
+        The wrapper is needed for IntersectionObserver but shouldn't affect form layout.
+        Browser support: https://caniuse.com/css-display-contents
+      */}
       {/* Hidden input to store the token */}
       <input
         ref={tokenInputRef}

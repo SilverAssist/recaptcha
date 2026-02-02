@@ -197,6 +197,8 @@ The `lazy` prop enables lazy loading of the reCAPTCHA script, which defers loadi
 
 ### Performance Benefits
 
+> **Note**: These metrics are approximate values measured on production websites using Google reCAPTCHA v3. Actual performance improvements will vary based on network conditions, device capabilities, and page complexity.
+
 | Metric | Without Lazy Loading | With Lazy Loading | Improvement |
 |--------|---------------------|-------------------|-------------|
 | **Initial JS** | 320KB+ | 0 KB (until visible) | -320KB |
