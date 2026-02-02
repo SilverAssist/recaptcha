@@ -186,10 +186,11 @@ export function RecaptchaWrapper({
     return () => observer.disconnect();
   }, [lazy, lazyRootMargin]);
 
-  // Load script when visible (or immediately if not lazy)
+  // Load script when visible (only for lazy mode)
   useEffect(() => {
     if (!siteKey) return;
-    if (lazy && !isVisible) return;
+    if (!lazy) return; // Only use manual loading for lazy mode
+    if (!isVisible) return; // Wait until visible
 
     const handleLoad = () => {
       setScriptLoaded(true);
