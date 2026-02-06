@@ -141,28 +141,47 @@ export function RecaptchaWrapper({
     }
 
     try {
-      if (typeof window !== "undefined" && window.grecaptcha) {
-        window.grecaptcha.ready(async () => {
-          try {
-            const token = await window.grecaptcha.execute(siteKey, { action });
-
-            // Store token in hidden input
-            if (tokenInputRef.current) {
-              tokenInputRef.current.value = token;
-            }
-
-            // Call callback if provided
-            if (onTokenGenerated) {
-              onTokenGenerated(token);
-            }
-          } catch (error) {
-            console.error("[reCAPTCHA] Error executing reCAPTCHA:", error);
-            if (onError && error instanceof Error) {
-              onError(error);
-            }
+      // Wait for grecaptcha to be available (with timeout)
+      // This handles the race condition where the script loads but
+      // window.grecaptcha is not immediately available
+      const waitForGrecaptcha = async (maxAttempts = 20, delayMs = 100): Promise<boolean> => {
+        for (let i = 0; i < maxAttempts; i++) {
+          if (typeof window !== "undefined" && window.grecaptcha) {
+            return true;
           }
-        });
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+        return false;
+      };
+
+      const grecaptchaAvailable = await waitForGrecaptcha();
+
+      if (!grecaptchaAvailable) {
+        // Silently return if grecaptcha is not available after timeout
+        // This maintains backward compatibility with the existing behavior
+        return;
       }
+
+      window.grecaptcha.ready(async () => {
+        try {
+          const token = await window.grecaptcha.execute(siteKey, { action });
+
+          // Store token in hidden input
+          if (tokenInputRef.current) {
+            tokenInputRef.current.value = token;
+          }
+
+          // Call callback if provided
+          if (onTokenGenerated) {
+            onTokenGenerated(token);
+          }
+        } catch (error) {
+          console.error("[reCAPTCHA] Error executing reCAPTCHA:", error);
+          if (onError && error instanceof Error) {
+            onError(error);
+          }
+        }
+      });
     } catch (error) {
       console.error("[reCAPTCHA] Error:", error);
       if (onError && error instanceof Error) {
