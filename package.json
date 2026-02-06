@@ -1,6 +1,6 @@
 {
   "name": "@silverassist/recaptcha",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Google reCAPTCHA v3 integration for Next.js applications with Server Actions support",
   "author": "Miguel Colmenares <me@miguelcolmenares.com>",
   "license": "Polyform-Noncommercial-1.0.0",

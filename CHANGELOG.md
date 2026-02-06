@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-02-06
+
+### Fixed
+
+- Fix race condition in lazy mode where `grecaptcha` was unavailable immediately after script load (#15)
+- Fix `act()` warnings in client tests by properly wrapping async callbacks
+- Fix TypeScript lint error for `tagName` property on `Node` type in tests
+
+### Changed
+
+- Add JSDoc module headers with `@module`, `@author`, `@license`, and `@version` tags to all source files
+- Document callback stability requirements (`useCallback`) in `onTokenGenerated` and `onError` props
+- Improve test coverage from 82% to 86% branch coverage with edge case tests
+- Suppress expected reCAPTCHA console logs during test execution
+- Update release prompt to include version sync for JSDoc headers
+
+### Dependencies
+
+- Bump `@types/node` from 25.0.10 to 25.2.0
+- Bump `@types/react` from 19.2.9 to 19.2.10
+- Bump `next` from 16.1.5 to 16.1.6
+
 ## [0.2.0] - 2026-02-02
 
 ### Added

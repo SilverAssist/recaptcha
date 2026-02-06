@@ -5,7 +5,7 @@
  *
  * @author Miguel Colmenares <me@miguelcolmenares.com>
  * @license Polyform-Noncommercial-1.0.0
- * @version 0.2.0
+ * @version 0.2.1
  * @see {@link https://developers.google.com/recaptcha/docs/v3|Google reCAPTCHA v3 Documentation}
  * @see {@link https://github.com/SilverAssist/recaptcha|GitHub Repository}
  */

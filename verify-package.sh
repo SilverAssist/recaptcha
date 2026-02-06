@@ -108,8 +108,9 @@ else
   ERRORS=$((ERRORS + 1))
 fi
 
-if grep -q '"version": "0.1.0"' package.json; then
-  echo "✅ Versión 0.1.0"
+VERSION=$(grep -o '"version": "[^"]*"' package.json | head -1 | cut -d'"' -f4)
+if [[ -n "$VERSION" && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "✅ Versión $VERSION"
 else
   echo "❌ Versión incorrecta o no encontrada"
   ERRORS=$((ERRORS + 1))
