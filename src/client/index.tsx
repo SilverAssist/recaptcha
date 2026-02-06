@@ -131,6 +131,7 @@ export function RecaptchaWrapper({
   const tokenInputRef = useRef<HTMLInputElement>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef<boolean>(true);
   const [isVisible, setIsVisible] = useState(!lazy); // If not lazy, start visible
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
@@ -141,28 +142,61 @@ export function RecaptchaWrapper({
     }
 
     try {
-      if (typeof window !== "undefined" && window.grecaptcha) {
-        window.grecaptcha.ready(async () => {
-          try {
-            const token = await window.grecaptcha.execute(siteKey, { action });
-
-            // Store token in hidden input
-            if (tokenInputRef.current) {
-              tokenInputRef.current.value = token;
-            }
-
-            // Call callback if provided
-            if (onTokenGenerated) {
-              onTokenGenerated(token);
-            }
-          } catch (error) {
-            console.error("[reCAPTCHA] Error executing reCAPTCHA:", error);
-            if (onError && error instanceof Error) {
-              onError(error);
-            }
+      // Wait for grecaptcha to be available (with timeout)
+      // This handles the race condition where the script loads but
+      // window.grecaptcha is not immediately available
+      const waitForGrecaptcha = async (maxAttempts = 20, delayMs = 100): Promise<boolean> => {
+        for (let i = 0; i < maxAttempts; i++) {
+          // Check if component is still mounted
+          if (!isMountedRef.current) {
+            return false;
           }
-        });
+          
+          if (typeof window !== "undefined" && window.grecaptcha) {
+            return true;
+          }
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+        return false;
+      };
+
+      const grecaptchaAvailable = await waitForGrecaptcha();
+
+      // Exit early if component unmounted during polling
+      if (!isMountedRef.current || !grecaptchaAvailable) {
+        return;
       }
+
+      window.grecaptcha.ready(async () => {
+        // Check if still mounted before executing
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        try {
+          const token = await window.grecaptcha.execute(siteKey, { action });
+
+          // Check if still mounted before storing token
+          if (!isMountedRef.current) {
+            return;
+          }
+
+          // Store token in hidden input
+          if (tokenInputRef.current) {
+            tokenInputRef.current.value = token;
+          }
+
+          // Call callback if provided
+          if (onTokenGenerated) {
+            onTokenGenerated(token);
+          }
+        } catch (error) {
+          console.error("[reCAPTCHA] Error executing reCAPTCHA:", error);
+          if (onError && error instanceof Error) {
+            onError(error);
+          }
+        }
+      });
     } catch (error) {
       console.error("[reCAPTCHA] Error:", error);
       if (onError && error instanceof Error) {
@@ -246,6 +280,15 @@ export function RecaptchaWrapper({
       }
     };
   }, [scriptLoaded, executeRecaptcha, refreshInterval]);
+
+  // Track mounted state to prevent side effects after unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Don't render anything if site key is not configured
   if (!siteKey) {

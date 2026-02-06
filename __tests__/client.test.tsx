@@ -478,6 +478,75 @@ describe("RecaptchaWrapper", () => {
 
       expect(mockDisconnect).toHaveBeenCalled();
     });
+
+    it("should generate token even when grecaptcha is delayed after script load", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      const originalGrecaptcha = (window as any).grecaptcha;
+      const originalAppendChild = document.head.appendChild;
+
+      try {
+        // Temporarily delete grecaptcha to simulate race condition
+        delete (window as any).grecaptcha;
+
+        // Mock document.head.appendChild to simulate script load
+        // where grecaptcha becomes available AFTER onload fires
+        document.head.appendChild = jest.fn((script: any) => {
+          setTimeout(() => {
+            // Call onload first (grecaptcha not yet available)
+            if (script.onload) script.onload();
+
+            // Make grecaptcha available shortly after (simulating race condition)
+            setTimeout(() => {
+              Object.defineProperty(window, "grecaptcha", {
+                value: {
+                  ready: mockReady,
+                  execute: mockExecute,
+                },
+                writable: true,
+                configurable: true,
+              });
+            }, 50);
+          }, 0);
+          return script;
+        }) as any;
+
+        render(<RecaptchaWrapper action="contact_form" lazy />);
+
+        // Verify IntersectionObserver was set up
+        expect(mockObserve).toHaveBeenCalled();
+
+        // Get the observer instance and callback
+        const observerInstance = mockIntersectionObserver.mock.instances[0];
+        const observerCallback = mockIntersectionObserver.mock.calls[0][0];
+
+        // Simulate intersection
+        act(() => {
+          observerCallback([{ isIntersecting: true }], observerInstance);
+        });
+
+        // Wait for script to load and token to be generated
+        // (even though grecaptcha was delayed)
+        await waitFor(
+          () => {
+            expect(mockExecute).toHaveBeenCalledWith("test-site-key", {
+              action: "contact_form",
+            });
+          },
+          { timeout: 2500 }
+        );
+      } finally {
+        // Restore document.head.appendChild
+        document.head.appendChild = originalAppendChild;
+
+        // Restore window.grecaptcha to its original state
+        if (typeof originalGrecaptcha !== "undefined") {
+          (window as any).grecaptcha = originalGrecaptcha;
+        } else {
+          delete (window as any).grecaptcha;
+        }
+      }
+    });
   });
 
   describe("Singleton Script Loading", () => {
