@@ -36,8 +36,27 @@ Verify the version is consistent across all files:
 
 - [ ] `package.json` → `version` field
 - [ ] `CHANGELOG.md` → Has entry for `[{version}]` with current date
+- [ ] Source file JSDoc headers → `@version` tag in all module headers
 
-**Action:** Read both files and compare versions. If mismatched, update them to `{version}`.
+**Source files with `@version` tag that must be updated:**
+
+```
+src/index.ts
+src/client/index.tsx
+src/server/index.ts
+src/types/index.ts
+src/constants/index.ts
+```
+
+**Action:** 
+1. Read `package.json` and `CHANGELOG.md` to compare versions
+2. Search for `@version` in all source files and verify they match `{version}`
+3. If any version is mismatched, update all occurrences to `{version}`
+
+```bash
+# Quick check for version consistency in headers
+grep -r "@version" src/
+```
 
 ### 3. CHANGELOG Validation
 
@@ -218,7 +237,17 @@ If something goes wrong after publishing:
 
 ## Version Bump Reference
 
-After release, update `package.json` for next development cycle:
+After release, update version for next development cycle in:
+
+1. **`package.json`** → `version` field
+2. **Source JSDoc headers** → `@version` tag in:
+   - `src/index.ts`
+   - `src/client/index.tsx`
+   - `src/server/index.ts`
+   - `src/types/index.ts`
+   - `src/constants/index.ts`
+
+**Semantic Versioning:**
 
 - **Patch** (bug fixes): `0.1.0` → `0.1.1`
 - **Minor** (new features, backward compatible): `0.1.0` → `0.2.0`

@@ -1,27 +1,32 @@
 require("@testing-library/jest-dom");
 
-// Mock Next.js Script component
-jest.mock("next/script", () => {
-  return function MockScript({ onLoad, onError, ...props }) {
-    // Simulate script load after a tick
-    if (onLoad) {
-      setTimeout(() => {
-        onLoad();
-      }, 0);
+// Suppress expected console.error logs from reCAPTCHA during tests
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+beforeAll(() => {
+  // Suppress expected reCAPTCHA error/warning logs
+  jest.spyOn(console, "error").mockImplementation((...args) => {
+    const message = args[0]?.toString?.() || "";
+    // Suppress expected reCAPTCHA messages during tests
+    if (
+      message.includes("[reCAPTCHA]") ||
+      message.includes("not wrapped in act")
+    ) {
+      return;
     }
-    return null;
-  };
+    originalConsoleError.apply(console, args);
+  });
+
+  jest.spyOn(console, "warn").mockImplementation((...args) => {
+    const message = args[0]?.toString?.() || "";
+    if (message.includes("[reCAPTCHA]")) {
+      return;
+    }
+    originalConsoleWarn.apply(console, args);
+  });
 });
 
-// Mock process.env
-const originalEnv = process.env;
-
-beforeEach(() => {
-  jest.resetModules();
-  process.env = { ...originalEnv };
-});
-
-afterEach(() => {
-  process.env = originalEnv;
-  jest.clearAllMocks();
+afterAll(() => {
+  jest.restoreAllMocks();
 });

@@ -1,11 +1,13 @@
 /**
- * reCAPTCHA v3 Client Component
+ * @module @silverassist/recaptcha/client
+ * @description reCAPTCHA v3 Client Component - Loads the Google reCAPTCHA script
+ * and generates tokens automatically. Place inside a form to add invisible spam protection.
  *
- * Loads the Google reCAPTCHA script and generates tokens automatically.
- * Place inside a form to add invisible spam protection.
- *
- * @see https://developers.google.com/recaptcha/docs/v3
- * @packageDocumentation
+ * @author Miguel Colmenares <me@miguelcolmenares.com>
+ * @license Polyform-Noncommercial-1.0.0
+ * @version 0.2.0
+ * @see {@link https://developers.google.com/recaptcha/docs/v3|Google reCAPTCHA v3 Documentation}
+ * @see {@link https://github.com/SilverAssist/recaptcha|GitHub Repository}
  */
 
 "use client";
@@ -98,10 +100,19 @@ function loadRecaptchaScript(
  *
  * @example With callbacks
  * ```tsx
+ * // IMPORTANT: Memoize callbacks to prevent unnecessary re-renders
+ * const handleToken = useCallback((token: string) => {
+ *   console.log("Token:", token);
+ * }, []);
+ *
+ * const handleError = useCallback((error: Error) => {
+ *   console.error("Error:", error);
+ * }, []);
+ *
  * <RecaptchaWrapper
  *   action="payment"
- *   onTokenGenerated={(token) => console.log("Token:", token)}
- *   onError={(error) => console.error("Error:", error)}
+ *   onTokenGenerated={handleToken}
+ *   onError={handleError}
  * />
  * ```
  *

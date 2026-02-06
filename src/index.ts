@@ -1,8 +1,12 @@
 /**
- * @silverassist/recaptcha
- *
- * Google reCAPTCHA v3 integration for Next.js applications.
+ * @module @silverassist/recaptcha
+ * @description Google reCAPTCHA v3 integration for Next.js applications.
  * Provides both client-side token generation and server-side validation.
+ *
+ * @author Miguel Colmenares <me@miguelcolmenares.com>
+ * @license Polyform-Noncommercial-1.0.0
+ * @version 0.2.0
+ * @see {@link https://github.com/SilverAssist/recaptcha|GitHub Repository}
  *
  * @example Client-side usage
  * ```tsx
@@ -28,8 +32,6 @@
  *   // Process form...
  * }
  * ```
- *
- * @packageDocumentation
  */
 
 // Client exports

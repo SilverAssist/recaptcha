@@ -1,9 +1,12 @@
 /**
- * reCAPTCHA v3 Integration Types
+ * @module @silverassist/recaptcha/types
+ * @description reCAPTCHA v3 Integration Types - Type definitions for Google
+ * reCAPTCHA v3 integration with Next.js.
  *
- * Type definitions for Google reCAPTCHA v3 integration with Next.js.
- *
- * @packageDocumentation
+ * @author Miguel Colmenares <me@miguelcolmenares.com>
+ * @license Polyform-Noncommercial-1.0.0
+ * @version 0.2.0
+ * @see {@link https://github.com/SilverAssist/recaptcha|GitHub Repository}
  */
 
 /**
@@ -56,9 +59,29 @@ export interface RecaptchaWrapperProps {
   siteKey?: string;
   /** Token refresh interval in ms (default: 90000 = 90 seconds) */
   refreshInterval?: number;
-  /** Callback when token is generated */
+  /**
+   * Callback when token is generated.
+   * @remarks Should be memoized with useCallback to prevent unnecessary re-renders.
+   * @example
+   * ```tsx
+   * const handleToken = useCallback((token: string) => {
+   *   console.log('Token:', token);
+   * }, []);
+   * <RecaptchaWrapper action="form" onTokenGenerated={handleToken} />
+   * ```
+   */
   onTokenGenerated?: (token: string) => void;
-  /** Callback when an error occurs */
+  /**
+   * Callback when an error occurs.
+   * @remarks Should be memoized with useCallback to prevent unnecessary re-renders.
+   * @example
+   * ```tsx
+   * const handleError = useCallback((error: Error) => {
+   *   console.error('reCAPTCHA error:', error);
+   * }, []);
+   * <RecaptchaWrapper action="form" onError={handleError} />
+   * ```
+   */
   onError?: (error: Error) => void;
   /** Enable lazy loading (default: false for backward compatibility) */
   lazy?: boolean;

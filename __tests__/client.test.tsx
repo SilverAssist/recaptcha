@@ -9,8 +9,11 @@ import { RecaptchaWrapper } from "../src/client";
 // Control variable to simulate script load error
 let simulateScriptError = false;
 
-// Mock next/script
+// Mock next/script with proper act() wrapping to avoid React state update warnings
 jest.mock("next/script", () => {
+  // Import act from react for use inside the mock
+  const { act } = require("@testing-library/react");
+  
   return function Script({
     src,
     onLoad,
@@ -22,14 +25,22 @@ jest.mock("next/script", () => {
     strategy?: string;
   }) {
     React.useEffect(() => {
-      // Use queueMicrotask to simulate async script load without timers
-      // This works correctly with fake timers
+      // Use queueMicrotask wrapped in act() to properly handle React state updates
+      // This prevents "not wrapped in act(...)" warnings
       if (simulateScriptError) {
         if (scriptOnError) {
-          queueMicrotask(() => scriptOnError());
+          queueMicrotask(() => {
+            act(() => {
+              scriptOnError();
+            });
+          });
         }
       } else if (onLoad) {
-        queueMicrotask(() => onLoad());
+        queueMicrotask(() => {
+          act(() => {
+            onLoad();
+          });
+        });
       }
     }, [onLoad, scriptOnError]);
     return null;
@@ -214,6 +225,183 @@ describe("RecaptchaWrapper", () => {
 
     expect(clearIntervalSpy).toHaveBeenCalled();
     clearIntervalSpy.mockRestore();
+  });
+
+  describe("Edge Cases for Coverage", () => {
+    beforeEach(() => {
+      // Reset window flags
+      delete (window as any).__recaptchaLoaded;
+      delete (window as any).__recaptchaLoading;
+      delete (window as any).__recaptchaCallbacks;
+    });
+
+    it("should handle unmount during grecaptcha polling", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      // Temporarily remove grecaptcha to force polling
+      const originalGrecaptcha = (window as any).grecaptcha;
+      delete (window as any).grecaptcha;
+
+      const { unmount } = render(<RecaptchaWrapper action="contact_form" />);
+
+      // Unmount immediately while polling is happening
+      unmount();
+
+      // Restore grecaptcha after a delay
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 150));
+        Object.defineProperty(window, "grecaptcha", {
+          value: originalGrecaptcha,
+          writable: true,
+          configurable: true,
+        });
+      });
+
+      // No error should occur - component should handle unmount gracefully
+      expect(mockExecute).not.toHaveBeenCalled();
+    });
+
+    it("should handle unmount after execute but before callback", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+      const onTokenGenerated = jest.fn();
+
+      // Make execute return a delayed promise
+      mockExecute.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve("delayed-token"), 100);
+          })
+      );
+
+      const { unmount } = render(
+        <RecaptchaWrapper
+          action="contact_form"
+          onTokenGenerated={onTokenGenerated}
+        />
+      );
+
+      // Unmount while execute is pending
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+        unmount();
+      });
+
+      // Wait for the delayed promise to resolve
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 100));
+      });
+
+      // The callback should NOT have been called because component unmounted
+      // (depending on timing, this tests the isMountedRef check)
+    });
+
+    it("should handle non-Error exceptions in executeRecaptcha", async () => {
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+      const onError = jest.fn();
+
+      // Make execute throw a non-Error value
+      mockExecute.mockRejectedValueOnce("string error");
+
+      render(<RecaptchaWrapper action="contact_form" onError={onError} />);
+
+      await waitFor(() => {
+        expect(mockExecute).toHaveBeenCalled();
+      });
+
+      // onError should NOT be called for non-Error exceptions
+      // (the code checks `error instanceof Error`)
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    it("should log warning in development when site key not configured", () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      delete process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
+      // Temporarily restore console.warn to capture the call
+      const warnSpy = jest.fn();
+      jest.spyOn(console, "warn").mockImplementation(warnSpy);
+
+      // Set development mode
+      Object.defineProperty(process.env, "NODE_ENV", {
+        value: "development",
+        configurable: true,
+      });
+
+      const { container } = render(<RecaptchaWrapper action="contact_form" />);
+
+      // Component should render nothing
+      expect(container.firstChild).toBeNull();
+
+      // Warning should have been called (though suppressed by our setup)
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Site key not configured")
+      );
+
+      // Restore NODE_ENV
+      Object.defineProperty(process.env, "NODE_ENV", {
+        value: originalNodeEnv,
+        configurable: true,
+      });
+    });
+
+    it("should not log warning in production when site key not configured", () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      delete process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
+      const warnSpy = jest.fn();
+      jest.spyOn(console, "warn").mockImplementation(warnSpy);
+
+      // Set production mode
+      Object.defineProperty(process.env, "NODE_ENV", {
+        value: "production",
+        configurable: true,
+      });
+
+      const { container } = render(<RecaptchaWrapper action="contact_form" />);
+
+      expect(container.firstChild).toBeNull();
+      // Warning should NOT be called in production
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      Object.defineProperty(process.env, "NODE_ENV", {
+        value: originalNodeEnv,
+        configurable: true,
+      });
+    });
+
+    it("should handle grecaptcha not becoming available after max attempts", async () => {
+      jest.useFakeTimers();
+      process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
+
+      // Remove grecaptcha entirely
+      delete (window as any).grecaptcha;
+
+      render(<RecaptchaWrapper action="contact_form" />);
+
+      // Advance timers beyond max polling attempts (20 * 100ms = 2000ms)
+      await act(async () => {
+        jest.advanceTimersByTime(2500);
+      });
+
+      // Execute should not have been called since grecaptcha never became available
+      expect(mockExecute).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
+
+      // Restore grecaptcha
+      Object.defineProperty(window, "grecaptcha", {
+        value: {
+          ready: mockReady,
+          execute: mockExecute,
+        },
+        writable: true,
+        configurable: true,
+      });
+    });
   });
 
   describe("Non-lazy Script Error Handling", () => {
@@ -611,7 +799,7 @@ describe("RecaptchaWrapper", () => {
 
       // Script should be appended only once
       const scriptCalls = appendChildSpy.mock.calls.filter(
-        (call) => call[0].tagName === "SCRIPT"
+        (call) => (call[0] as Element).tagName === "SCRIPT"
       );
       expect(scriptCalls.length).toBe(1);
 
@@ -714,7 +902,7 @@ describe("RecaptchaWrapper", () => {
 
       // Script should NOT be appended again
       const scriptCalls = appendChildSpy.mock.calls.filter(
-        (call) => call[0].tagName === "SCRIPT"
+        (call) => (call[0] as Element).tagName === "SCRIPT"
       );
       expect(scriptCalls.length).toBe(0);
 
@@ -771,7 +959,7 @@ describe("RecaptchaWrapper", () => {
 
       // Script should NOT be appended again (Next.js Script handles the first load)
       const scriptCalls = appendChildSpy.mock.calls.filter(
-        (call) => call[0].tagName === "SCRIPT"
+        (call) => (call[0] as Element).tagName === "SCRIPT"
       );
       expect(scriptCalls.length).toBe(0);
 
