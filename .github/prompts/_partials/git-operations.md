@@ -1,0 +1,160 @@
+# Git Operations Partial
+
+Reusable Git workflow operations for prompts.
+
+## Usage
+
+Include these steps in prompts that require Git operations.
+
+---
+
+## Branch Operations
+
+### Step: Verify Branch Status
+
+1. **Check current branch**:
+   - Run `git branch --show-current` to get current branch name
+   - Ensure not on protected branches: `main`, `dev`, `stg`, `master`
+
+2. **Check branch naming**:
+   - Verify branch follows convention:
+     - `feature/[TICKET-ID]-short-description`
+     - `bugfix/[TICKET-ID]-short-description`
+
+3. **Check uncommitted changes**:
+   - Run `git status` to see working directory state
+   - Ensure all changes are committed before proceeding
+
+---
+
+### Step: Create Working Branch
+
+1. **Ensure on latest dev**:
+   ```bash
+   git checkout dev
+   git pull origin dev
+   ```
+
+2. **Create new branch**:
+   ```bash
+   git checkout -b feature/[TICKET-ID]-short-description
+   # or
+   git checkout -b bugfix/[TICKET-ID]-short-description
+   ```
+
+---
+
+### Step: Push Branch
+
+1. **Push to remote**:
+   ```bash
+   git push -u origin <branch-name>
+   ```
+
+2. **Verify push**:
+   - Confirm branch appears in remote repository
+
+---
+
+## Sync Operations
+
+### Step: Sync with Base Branch
+
+1. **Fetch latest**:
+   ```bash
+   git fetch origin
+   ```
+
+2. **Rebase on dev**:
+   ```bash
+   git rebase origin/dev
+   ```
+
+3. **Handle conflicts** (if any):
+   - Resolve each conflict file
+   - Stage resolved files: `git add <file>`
+   - Continue rebase: `git rebase --continue`
+
+4. **Push updated branch**:
+   ```bash
+   git push --force-with-lease
+   ```
+
+---
+
+## Commit Operations
+
+### Step: Review Commits
+
+1. **View recent commits**:
+   ```bash
+   git log --oneline -5
+   ```
+
+2. **Verify commit messages**:
+   - Follow format: `TICKET-ID: Short description`
+   - Use present tense, imperative mood
+   - Example: `WEB-726: Add font size accessibility controls`
+
+3. **Squash if needed** (too many small commits):
+   ```bash
+   git rebase -i HEAD~N  # N = number of commits to squash
+   ```
+
+---
+
+### Step: View Changes
+
+1. **Summary of changes**:
+   ```bash
+   git diff --stat
+   ```
+
+2. **List changed files**:
+   ```bash
+   git diff main --name-only
+   ```
+
+3. **Detailed diff**:
+   ```bash
+   git diff main
+   ```
+
+---
+
+## Cleanup Operations
+
+### Step: Post-Merge Cleanup
+
+1. **Delete local branch**:
+   ```bash
+   git branch -d <branch-name>
+   ```
+
+2. **Delete remote branch**:
+   ```bash
+   git push origin --delete <branch-name>
+   ```
+
+3. **Prune stale branches**:
+   ```bash
+   git remote prune origin
+   ```
+
+---
+
+## Branch Naming Convention
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Feature | `feature/[TICKET-ID]-description` | `feature/WEB-726-font-controls` |
+| Bugfix | `bugfix/[TICKET-ID]-description` | `bugfix/WEB-734-logo-sizing` |
+| Hotfix | `hotfix/[TICKET-ID]-description` | `hotfix/WEB-800-critical-fix` |
+
+## Protected Branches
+
+These branches require PRs and cannot receive direct commits:
+- `main` - Production
+- `dev` - Development
+- `stg` - Staging
+- `master` - Legacy (if exists)
