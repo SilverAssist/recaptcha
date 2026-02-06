@@ -131,6 +131,7 @@ export function RecaptchaWrapper({
   const tokenInputRef = useRef<HTMLInputElement>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef<boolean>(true);
   const [isVisible, setIsVisible] = useState(!lazy); // If not lazy, start visible
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
@@ -146,6 +147,11 @@ export function RecaptchaWrapper({
       // window.grecaptcha is not immediately available
       const waitForGrecaptcha = async (maxAttempts = 20, delayMs = 100): Promise<boolean> => {
         for (let i = 0; i < maxAttempts; i++) {
+          // Check if component is still mounted
+          if (!isMountedRef.current) {
+            return false;
+          }
+          
           if (typeof window !== "undefined" && window.grecaptcha) {
             return true;
           }
@@ -156,15 +162,24 @@ export function RecaptchaWrapper({
 
       const grecaptchaAvailable = await waitForGrecaptcha();
 
-      if (!grecaptchaAvailable) {
-        // Silently return if grecaptcha is not available after timeout
-        // This maintains backward compatibility with the existing behavior
+      // Exit early if component unmounted during polling
+      if (!isMountedRef.current || !grecaptchaAvailable) {
         return;
       }
 
       window.grecaptcha.ready(async () => {
+        // Check if still mounted before executing
+        if (!isMountedRef.current) {
+          return;
+        }
+
         try {
           const token = await window.grecaptcha.execute(siteKey, { action });
+
+          // Check if still mounted before storing token
+          if (!isMountedRef.current) {
+            return;
+          }
 
           // Store token in hidden input
           if (tokenInputRef.current) {
@@ -265,6 +280,15 @@ export function RecaptchaWrapper({
       }
     };
   }, [scriptLoaded, executeRecaptcha, refreshInterval]);
+
+  // Track mounted state to prevent side effects after unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Don't render anything if site key is not configured
   if (!siteKey) {
