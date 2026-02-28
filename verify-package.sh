@@ -22,16 +22,16 @@ echo ""
 
 echo "2. CÓDIGO FUENTE"
 echo "----------------"
-find src -type f | while read file; do
+while IFS= read -r file; do
   echo "✅ $file"
-done
+done < <(find src -type f)
 echo ""
 
 echo "3. TESTS"
 echo "--------"
-find __tests__ -type f | while read file; do
+while IFS= read -r file; do
   echo "✅ $file"
-done
+done < <(find __tests__ -type f)
 echo ""
 
 echo "4. ARCHIVOS BUILD"
@@ -73,7 +73,7 @@ if [ -d "dist" ]; then
     echo "❌ dist/index.mjs no encontrado"
     ERRORS=$((ERRORS + 1))
   fi
-  if find dist -type f \( -name "*.d.ts" -o -name "*.d.mts" \) 2>/dev/null | grep -q .; then
+  if find dist -type f \( -name "*.d.ts" -o -name "*.d.mts" \) -quit 2>/dev/null | grep -q .; then
     echo "✅ TypeScript definitions (.d.ts, .d.mts)"
   else
     echo "❌ TypeScript definitions (.d.ts, .d.mts) no encontradas"
