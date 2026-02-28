@@ -141,7 +141,7 @@ import { myFunction } from '@/lib/my-module';
 | **Types** | `feat` • `fix` • `docs` • `refactor` • `test` • `chore` |
 | **Branch** | `feature/JIRA-XXX-description` • `bugfix/JIRA-XXX-description` |
 
-> ⚠️ **CRITICAL**: Always include the Jira ticket prefix in commits. Never commit without it.
+> ⚠️ **CRITICAL**: Always include the JIRA ticket prefix in commits. Never commit without it.
 
 ---
 
@@ -168,7 +168,7 @@ Before ANY push to dev/staging/main:
 □ All unit tests passing locally
 □ Build completes without errors
 □ No console.log() left in code
-□ Commit message has Jira prefix (e.g., WEB-123: ...)
+□ Commit message has JIRA prefix (e.g., WEB-123: ...)
 ```
 
 ### Why This Matters
