@@ -106,6 +106,8 @@
   },
   "devDependencies": {
     "@silverassist/copilot-prompts-kit": "^2.0.0",
+    "@swc/core": "^1.16.1",
+    "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/jest": "^30.0.0",
@@ -117,7 +119,6 @@
     "next": "^16.1.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "ts-jest": "^29.4.6",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   }

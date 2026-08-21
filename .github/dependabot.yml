@@ -16,10 +16,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # TypeScript is pinned to 6.x: ts-jest peer-requires `>=4.3 <7` and no
-    # published ts-jest supports TypeScript 7 yet (latest is 29.4.12). Bumping
-    # to 7.0.2 broke `npm ci` outright and went unnoticed until a release was
-    # attempted. Remove this ignore once ts-jest declares TypeScript 7 support.
+    # TypeScript stays on 6.x: tsup's DTS build crashes on TypeScript 7 with
+    # "Cannot read properties of undefined (reading 'useCaseSensitiveFileNames')",
+    # and tsup 8.5.1 is the latest release. Its peer range says `>=4.5.0`, so npm
+    # will not stop the bump -- only this ignore will. A 7.0.2 bump previously
+    # reached the default branch and broke `npm ci` outright (#55).
+    # Remove once tsup supports TypeScript 7; ts-jest, the other blocker, is gone.
     ignore:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
