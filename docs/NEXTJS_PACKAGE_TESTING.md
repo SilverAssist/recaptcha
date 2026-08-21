@@ -217,12 +217,11 @@ parent and child. Not worth the footgun for a ~40-line file.
 
 ## Open items
 
-- **Next version coverage.** The fixture pins Next 16, the version the consuming
-  apps run. `recaptcha` declares `next: ">=14.0.0"`, so 14 and 15 are
-  unverified — and **Next 15 rejects TypeScript 7 outright** (_"upgrade to a
-  Next.js v16.2.11 or later"_), which matters because the consuming repos run
-  **16.2.9**, below that threshold. Either narrow the peer range or add a matrix
-  leg.
+- ~~**Next version coverage.**~~ Resolved: the `next` peer range is now `>=16.0.0`,
+  matching what the fixture tests and what every internal consumer runs. It claimed
+  two untested majors before — Next 15 rejects TypeScript 7 outright
+  (_"upgrade to a Next.js v16.2.11 or later"_), so `>=14.0.0` was never honest about
+  what this package actually supported.
 - **`recaptcha` still has no ESLint or Prettier.** Its `lint` script is
   `tsc --noEmit` — a typecheck wearing a lint's name. `consent-banner` and `icons`
   run both, and the harness's `ESLINT_IGNORE_PATTERNS` is wired into their configs;
