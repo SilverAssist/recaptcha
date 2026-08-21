@@ -1,8 +1,15 @@
 # Testing Next.js packages: what we learned building the pilot
 
-Reference notes for the shared toolkit that will replace this per-repo setup.
-Written from the pilot in this repo (SilverAssist/recaptcha#62), which was built
-after four real defects shipped to npm undetected.
+Design notes behind [`@silverassist/next-testing-toolkit`][pkg], the shared harness
+this repo now consumes. Written from the pilot here (SilverAssist/recaptcha#62), which
+was built after four real defects shipped to npm undetected, then replicated to
+`consent-banner` and `icons` before being extracted.
+
+The reasoning is kept because it explains _why_ the harness is shaped the way it is —
+the constraints below are the reason `build-fixture` installs a packed tarball and the
+fixture page is a Server Component. For how to **use** it, see the package README.
+
+[pkg]: https://www.npmjs.com/package/@silverassist/next-testing-toolkit
 
 ---
 
@@ -11,12 +18,12 @@ after four real defects shipped to npm undetected.
 None was visible to a unit test. Three of the four had already reached
 production.
 
-| Package | Defect | Only visible when |
-| --- | --- | --- |
-| `consent-banner` | Shipped with **no `"use client"` at all**, for its entire published life | a Server Component imports the *built* file |
-| `performance-toolkit` | `exports` pointed all 8 subpaths at `.mjs` files the build never produced — the library API was unimportable | Node resolves the *published tarball* |
-| `recaptcha` | Root barrel export threw in Server Components | a Server Component imports it |
-| `recaptcha` in `osa-nextjs` | Token never reached the Server Action (WEB-901 → `hotfix: Disable reCAPTCHA integration due to token issues`) | a real form submission |
+| Package                     | Defect                                                                                                        | Only visible when                           |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `consent-banner`            | Shipped with **no `"use client"` at all**, for its entire published life                                      | a Server Component imports the _built_ file |
+| `performance-toolkit`       | `exports` pointed all 8 subpaths at `.mjs` files the build never produced — the library API was unimportable  | Node resolves the _published tarball_       |
+| `recaptcha`                 | Root barrel export threw in Server Components                                                                 | a Server Component imports it               |
+| `recaptcha` in `osa-nextjs` | Token never reached the Server Action (WEB-901 → `hotfix: Disable reCAPTCHA integration due to token issues`) | a real form submission                      |
 
 Two patterns fall out of that table, and they drive the whole design:
 
@@ -49,6 +56,7 @@ That is what turns a missing directive in the package into a build failure
 instead of a silent runtime break in someone else's app.
 
 **Test the production build**, not `next dev`. Next's own guidance:
+
 > We recommend running your tests against your production code to more closely
 > resemble how your application will behave.
 
@@ -75,8 +83,8 @@ deliberately:
   ([GitHub changelog, 2026-07-08](https://github.blog/changelog/2026-07-08-npm-install-time-security-and-gat-bypass2fa-deprecation/)).
   Playwright worked first try.
 
-Next documents both for E2E. Its only Cypress caveat — *"Cypress currently
-doesn't support Component Testing for `async` Server Components"* — applies to
+Next documents both for E2E. Its only Cypress caveat — _"Cypress currently
+doesn't support Component Testing for `async` Server Components"_ — applies to
 Component Testing, not the E2E path used here, so it was not the deciding
 factor.
 
@@ -98,7 +106,7 @@ the README — to work around a build defect.
 The barrel was fine. `dist/index.js` was **inlining** `./client` (14 hook
 references, ~11 kB) instead of re-exporting it, and inlining across the RSC
 boundary drops the `"use client"` directive, which exists only as a property of
-a *module*.
+a _module_.
 
 ### The rule
 
@@ -140,8 +148,8 @@ No source-level test can observe any of them.
 
 ## Build-tool notes
 
-**`tsup` is dead** — *"This project is not actively maintained anymore. Please
-consider using tsdown instead."* No PR merged since Nov 2025. Its DTS build
+**`tsup` is dead** — _"This project is not actively maintained anymore. Please
+consider using tsdown instead."_ No PR merged since Nov 2025. Its DTS build
 crashes on TypeScript 7 ([#1405](https://github.com/egoist/tsup/issues/1405)).
 
 **Migrating to tsdown**: capture the `dist/` file list **before** migrating and
@@ -166,11 +174,11 @@ not a runtime one — but if CI drops Node 20, `engines` must stop claiming it.
 
 Cheap, and they found real defects:
 
-| Tool | Catches |
-| --- | --- |
-| `npm publish --dry-run` | what actually ships, before it ships |
-| `publint` | malformed `exports`, wrong fields, broken paths |
-| `@arethetypeswrong/cli` | types unresolvable per module-resolution mode |
+| Tool                    | Catches                                         |
+| ----------------------- | ----------------------------------------------- |
+| `npm publish --dry-run` | what actually ships, before it ships            |
+| `publint`               | malformed `exports`, wrong fields, broken paths |
+| `@arethetypeswrong/cli` | types unresolvable per module-resolution mode   |
 
 `attw` caught `jsdoc-to-tsdoc` shipping 57 kB of declarations that
 `moduleResolution: "node"` consumers could not see — one missing top-level
@@ -179,9 +187,9 @@ be taken back.**
 
 ---
 
-## What belongs in the shared package
+## What went into the shared package
 
-**Reusable across packages:**
+All of this now ships in the package:
 
 - fixture generator (a minimal Next app with a Server Component page)
 - the pack → install → `next build` script
@@ -190,7 +198,7 @@ be taken back.**
 - the three RSC-boundary assertions — they apply to any package with client components
 - `publint` / `attw` wrappers
 
-**Package-specific, stays local:**
+**Package-specific, still local in each repo:**
 
 - the fixture's `page.tsx`
 - behaviour specs
@@ -211,10 +219,11 @@ parent and child. Not worth the footgun for a ~40-line file.
 
 - **Next version coverage.** The fixture pins Next 16, the version the consuming
   apps run. `recaptcha` declares `next: ">=14.0.0"`, so 14 and 15 are
-  unverified — and **Next 15 rejects TypeScript 7 outright** (*"upgrade to a
-  Next.js v16.2.11 or later"*), which matters because the consuming repos run
+  unverified — and **Next 15 rejects TypeScript 7 outright** (_"upgrade to a
+  Next.js v16.2.11 or later"_), which matters because the consuming repos run
   **16.2.9**, below that threshold. Either narrow the peer range or add a matrix
   leg.
-- **Replication** to `consent-banner` and `icons` — the step that will reveal
-  which parts of this are genuinely common. Extract the package only after that;
-  extracting now would be guessing at the abstraction.
+- **`recaptcha` still has no ESLint or Prettier.** Its `lint` script is
+  `tsc --noEmit` — a typecheck wearing a lint's name. `consent-banner` and `icons`
+  run both, and the harness's `ESLINT_IGNORE_PATTERNS` is wired into their configs;
+  there is nothing here to wire it into.

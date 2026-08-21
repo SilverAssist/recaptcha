@@ -100,7 +100,7 @@
     "release": "npm run prepublishOnly && npm publish --access public",
     "check": "npm run lint && npm run test",
     "prepare": "husky || true",
-    "e2e:setup": "sh scripts/e2e-install-fixture.sh",
+    "e2e:setup": "next-testing-toolkit build-fixture --port 3210",
     "e2e": "npm run e2e:setup && playwright test -c e2e/playwright.config.ts"
   },
   "peerDependencies": {
@@ -111,6 +111,7 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@silverassist/copilot-prompts-kit": "^2.0.0",
+    "@silverassist/next-testing-toolkit": "^0.2.0",
     "@swc/core": "^1.16.1",
     "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^7.0.0",

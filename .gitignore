@@ -40,3 +40,11 @@ e2e/test-results/
 e2e/playwright-report/
 *.tgz
 test-results/
+
+# --- next-testing-toolkit (generated fixture files) ---
+# The harness regenerates these on every run; only app/page.tsx is authored.
+e2e/fixture/app/layout.tsx
+e2e/fixture/next.config.mjs
+e2e/fixture/next-env.d.ts
+e2e/fixture/tsconfig.json
+e2e/fixture/package.json
