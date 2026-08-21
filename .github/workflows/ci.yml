@@ -14,8 +14,14 @@ on:
 
 jobs:
   quality:
-    name: Code Quality
+    # publish.yml releases on Node 24; the matrix keeps Node 20 covered too,
+    # matching the other @silverassist packages.
+    name: Code Quality (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.x', '24.x']
     
     steps:
       - name: Checkout code
@@ -24,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: ${{ matrix.node }}
           cache: 'npm'
       
       - name: Install dependencies
