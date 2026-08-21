@@ -90,14 +90,16 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsdown && node add-use-client.js",
-    "dev": "tsup --watch",
+    "dev": "tsdown --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "tsc --noEmit",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run lint && npm run build && npm run test",
-    "release": "npm run prepublishOnly && npm publish --access public"
+    "release": "npm run prepublishOnly && npm publish --access public",
+    "check": "npm run lint && npm run test",
+    "prepare": "husky || true"
   },
   "peerDependencies": {
     "next": ">=14.0.0",
@@ -114,6 +116,7 @@
     "@types/node": "^26.0.0",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
+    "husky": "^9.1.7",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "next": "^16.1.5",
