@@ -89,7 +89,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsup && node add-use-client.js",
+    "build": "tsdown && node add-use-client.js",
     "dev": "tsup --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -119,8 +119,8 @@
     "next": "^16.1.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "tsup": "^8.5.1",
-    "typescript": "^6.0.3"
+    "tsdown": "^0.22.14",
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -14,14 +14,16 @@ on:
 
 jobs:
   quality:
-    # publish.yml releases on Node 24; the matrix keeps Node 20 covered too,
-    # matching the other @silverassist packages.
+    # tsdown requires Node ^22.18.0 || >=24.11.0, so the build cannot run on
+    # Node 20 at all. That is a *build* constraint -- consumers run the compiled
+    # dist/, not tsdown -- so `engines` still says >=20.0.0. Nothing verifies
+    # that claim any more, though; see the note in PR #59.
     name: Code Quality (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node: ['20.x', '24.x']
+        node: ['22.x', '24.x']
     
     steps:
       - name: Checkout code
