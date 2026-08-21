@@ -1,6 +1,5 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  preset: "ts-jest",
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   moduleNameMapper: {
@@ -23,12 +22,17 @@ module.exports = {
       statements: 80,
     },
   },
+  // @swc/jest instead of ts-jest: ts-jest peer-requires TypeScript <7 and has
+  // no TypeScript 7 release, which pinned this package to TS 6 and broke
+  // `npm ci` when a bump slipped through (see #55). swc transpiles without
+  // type-checking; `npm run lint` (tsc --noEmit) is what type-checks.
   transform: {
-    "^.+\\.tsx?$": [
-      "ts-jest",
+    "^.+\\.(t|j)sx?$": [
+      "@swc/jest",
       {
-        tsconfig: {
-          jsx: "react-jsx",
+        jsc: {
+          parser: { syntax: "typescript", tsx: true },
+          transform: { react: { runtime: "automatic" } },
         },
       },
     ],
