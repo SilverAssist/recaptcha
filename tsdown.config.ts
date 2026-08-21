@@ -10,6 +10,11 @@ export default defineConfig([
     entry: {
       "client/index": "src/client/index.tsx",
     },
+    // Replaces the former add-use-client.js post-build script. That script
+    // hardcoded two output paths and ran after the fact; tsdown emits the
+    // directive as part of the build, scoped to this config object only --
+    // the second one (root barrel + ./server) must stay unmarked.
+    banner: '"use client";',
     format: ["cjs", "esm"],
     fixedExtension: false,
     dts: { sourcemap: false },

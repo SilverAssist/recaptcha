@@ -22,7 +22,7 @@ Execute all validation commands in sequence:
 ```bash
 npm run lint           # tsc --noEmit
 npm test               # Jest tests
-npm run build          # tsup → dist/ (ESM + CJS + .d.ts) + add-use-client.js
+npm run build          # tsdown → dist/ (ESM + CJS + .d.ts)
 ```
 
 - [ ] TypeScript compilation succeeds (lint)

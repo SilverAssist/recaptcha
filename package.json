@@ -89,7 +89,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsdown && node add-use-client.js",
+    "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "jest",
     "test:watch": "jest --watch",
