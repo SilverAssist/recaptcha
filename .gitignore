@@ -31,3 +31,12 @@ yarn-error.log*
 # Misc
 *.tsbuildinfo
 .turbo/
+
+# e2e fixture artifacts
+e2e/fixture/node_modules/
+e2e/fixture/.next/
+e2e/fixture/package-lock.json
+e2e/test-results/
+e2e/playwright-report/
+*.tgz
+test-results/

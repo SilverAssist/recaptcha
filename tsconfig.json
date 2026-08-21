@@ -26,7 +26,12 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      // The barrel self-references this subpath to keep the "use client"
+      // module boundary intact through the build. At type-check time dist/
+      // may not exist yet, so point TypeScript at the source instead of the
+      // exports map -- otherwise `tsc --noEmit` fails on a clean checkout.
+      "@silverassist/recaptcha/client": ["./src/client/index.tsx"]
     }
   },
   "include": ["src/**/*"],

@@ -40,9 +40,24 @@ Without `| cat`, the command output may hang or show progress spinners that inte
 
 ## Build System
 
-Uses **tsup** with two separate bundle configurations in [tsup.config.ts](tsup.config.ts):
-1. Client bundle - includes `"use client"` directive, externals React/Next
+Uses **tsdown** with two separate bundle configurations in [tsdown.config.ts](tsdown.config.ts):
+1. Client bundle - emits the `"use client"` directive via tsdown's `banner`, externals React/Next
 2. Server/types bundle - runs second with `clean: false` to preserve client output
+
+**Load-bearing: `@silverassist/recaptcha/client` is external in config #2.**
+The root barrel re-exports the client component, and bundling it in would
+inline the code and flatten away its `"use client"` directive - the root
+export then throws `TypeError: (0 , h.useRef) is not a function` in any
+Server Component. The root cannot simply carry the directive itself, because
+it also re-exports `./server`, which handles `RECAPTCHA_SECRET_KEY`.
+
+The specifier is the package self-reference rather than `./client` because
+`require()` resolves a directory index in CJS but ESM does not - a relative
+path would work in one format and silently break the other. `tsconfig.json`
+maps it to source, since `dist/` does not exist at type-check time.
+
+`src/__tests__/build-output.test.ts` asserts all three invariants against the
+built output. Do not weaken them without reading that file.
 
 ```bash
 npm run build      # Builds CJS + ESM + .d.ts files to dist/

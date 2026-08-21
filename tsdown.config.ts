@@ -10,6 +10,11 @@ export default defineConfig([
     entry: {
       "client/index": "src/client/index.tsx",
     },
+    // Replaces the former add-use-client.js post-build script. That script
+    // hardcoded two output paths and ran after the fact; tsdown emits the
+    // directive as part of the build, scoped to this config object only --
+    // the second one (root barrel + ./server) must stay unmarked.
+    banner: '"use client";',
     format: ["cjs", "esm"],
     fixedExtension: false,
     dts: { sourcemap: false },
@@ -33,7 +38,12 @@ export default defineConfig([
     sourcemap: true,
     // Not `clean`: the client bundle above already emptied dist/.
     clean: false,
-    deps: { neverBundle: ["react", "react-dom", "next"] },
+    // `./client` stays EXTERNAL here on purpose. Inlining it flattens the
+    // barrel across the RSC boundary and drops the "use client" directive,
+    // which is what made the root export unusable from a Server Component.
+    // Kept external, dist/index.* re-exports dist/client/*, the directive
+    // survives, and the barrel convention is preserved.
+    deps: { neverBundle: ["react", "react-dom", "next", "@silverassist/recaptcha/client"] },
     treeshake: true,
     minify: false,
   },

@@ -89,7 +89,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsdown && node add-use-client.js",
+    "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -99,7 +99,9 @@
     "prepublishOnly": "npm run clean && npm run lint && npm run build && npm run test",
     "release": "npm run prepublishOnly && npm publish --access public",
     "check": "npm run lint && npm run test",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "e2e:setup": "sh scripts/e2e-install-fixture.sh",
+    "e2e": "npm run e2e:setup && playwright test -c e2e/playwright.config.ts"
   },
   "peerDependencies": {
     "next": ">=14.0.0",
@@ -107,6 +109,7 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@silverassist/copilot-prompts-kit": "^2.0.0",
     "@swc/core": "^1.16.1",
     "@swc/jest": "^0.2.39",
@@ -127,5 +130,8 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "allowScripts": {
+    "cypress@15.21.0": true
   }
 }
