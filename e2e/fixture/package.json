@@ -1,0 +1,17 @@
+{
+  "name": "recaptcha-e2e-fixture",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "next build",
+    "start": "next start -p 3210"
+  },
+  "dependencies": {
+    "@silverassist/recaptcha": "file:../../silverassist-recaptcha-0.2.1.tgz",
+    "@types/react": "^19.2.18",
+    "next": "^16.3.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "^5.9.3"
+  }
+}
