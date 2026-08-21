@@ -16,8 +16,9 @@ jobs:
   quality:
     # tsdown requires Node ^22.18.0 || >=24.11.0, so the build cannot run on
     # Node 20 at all. That is a *build* constraint -- consumers run the compiled
-    # dist/, not tsdown -- so `engines` still says >=20.0.0. Nothing verifies
-    # that claim any more, though; see the note in PR #59.
+    # dist/, not tsdown. `engines` declares >=22.0.0 to match exactly what this
+    # matrix verifies -- every consuming Next.js repo already pins Node 22, and
+    # Node 20 lost security support on 2026-04-30.
     name: Code Quality (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
