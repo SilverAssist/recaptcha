@@ -23,10 +23,6 @@
     // `process` and the NodeJS namespace are unresolved in the client and
     // server entrypoints.
     "types": ["node"],
-    // tsup injects `baseUrl` into its DTS build regardless of this file, and TS 6
-    // errors on it (TS5101). Remove together with the TypeScript 6 pin in
-    // .github/dependabot.yml once tsup's DTS build supports TypeScript 7.
-    "ignoreDeprecations": "6.0",
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "paths": {

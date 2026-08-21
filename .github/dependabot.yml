@@ -16,15 +16,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # TypeScript stays on 6.x: tsup's DTS build crashes on TypeScript 7 with
-    # "Cannot read properties of undefined (reading 'useCaseSensitiveFileNames')",
-    # and tsup 8.5.1 is the latest release. Its peer range says `>=4.5.0`, so npm
-    # will not stop the bump -- only this ignore will. A 7.0.2 bump previously
-    # reached the default branch and broke `npm ci` outright (#55).
-    # Remove once tsup supports TypeScript 7; ts-jest, the other blocker, is gone.
-    ignore:
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
     # Separate major updates for careful review
     open-pull-requests-limit: 5
     labels:
