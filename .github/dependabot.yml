@@ -16,6 +16,13 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # TypeScript is pinned to 6.x: ts-jest peer-requires `>=4.3 <7` and no
+    # published ts-jest supports TypeScript 7 yet (latest is 29.4.12). Bumping
+    # to 7.0.2 broke `npm ci` outright and went unnoticed until a release was
+    # attempted. Remove this ignore once ts-jest declares TypeScript 7 support.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     # Separate major updates for careful review
     open-pull-requests-limit: 5
     labels:

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`npm ci` was broken, blocking every release** ([#55](https://github.com/SilverAssist/recaptcha/issues/55)). A Dependabot major bump took TypeScript from 6.0.3 to 7.0.2 (#49), but `ts-jest` peer-requires `>=4.3 <7` and no published version supports TypeScript 7 yet — the latest, 29.4.12, still caps at `<7`. `npm ci` failed with `ERESOLVE` on Node 20 and 24 alike, so neither CI nor a release could install. TypeScript is back on `^6.0.3` and Dependabot now ignores its major updates until ts-jest catches up.
+- **Three latent type errors the TypeScript 7 bump had masked.** Restoring TypeScript 6 surfaced them: `tsconfig.json` still set `baseUrl`, which TS 6 reports as deprecated (`TS5101`) — removed, since `paths` has not needed it since TS 5. TS 6 also does not auto-include `@types/node` the way TS 7 does, leaving `process` and the `NodeJS` namespace unresolved in both entrypoints, so `types: ["node"]` is now explicit. Finally, `tsup` injects its own `baseUrl` into the DTS build regardless of `tsconfig.json`, which `ignoreDeprecations: "6.0"` silences.
+
+### Changed
+
+- **npm publishing moved to trusted publishing (OIDC)** ([#55](https://github.com/SilverAssist/recaptcha/issues/55)). `publish.yml` no longer reads an `NPM_TOKEN` secret: it requests `id-token: write` and npm exchanges that OIDC token for publish rights against the trusted publisher registered for this package. Long-lived tokens are on a deprecation clock — from January 2027 2FA-bypass granular tokens lose direct publishing entirely. The publish job moves to Node 24, which ships npm 11.x natively as trusted publishing requires. Repo and package are both public, so provenance is now attested automatically.
+
 ## [0.2.1] - 2026-02-06
 
 ### Fixed
