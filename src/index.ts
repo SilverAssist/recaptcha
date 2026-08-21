@@ -35,7 +35,16 @@
  */
 
 // Client exports
-export { RecaptchaWrapper } from "./client";
+// Self-referencing import, not "./client".
+//
+// This keeps the barrel intact while preserving the React Server Components
+// boundary. Bundling ./client into this file would inline the component and
+// drop its "use client" directive, making the root export unusable from a
+// Server Component -- the defect the Next.js integration fixture caught.
+//
+// The specifier is the package's own subpath so Node resolves it through the
+// exports map in both CJS and ESM; a relative "./client" resolves only in CJS.
+export { RecaptchaWrapper } from "@silverassist/recaptcha/client";
 
 // Server exports
 export {

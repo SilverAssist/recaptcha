@@ -33,7 +33,12 @@ export default defineConfig([
     sourcemap: true,
     // Not `clean`: the client bundle above already emptied dist/.
     clean: false,
-    deps: { neverBundle: ["react", "react-dom", "next"] },
+    // `./client` stays EXTERNAL here on purpose. Inlining it flattens the
+    // barrel across the RSC boundary and drops the "use client" directive,
+    // which is what made the root export unusable from a Server Component.
+    // Kept external, dist/index.* re-exports dist/client/*, the directive
+    // survives, and the barrel convention is preserved.
+    deps: { neverBundle: ["react", "react-dom", "next", "@silverassist/recaptcha/client"] },
     treeshake: true,
     minify: false,
   },

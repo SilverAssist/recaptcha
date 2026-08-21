@@ -7,13 +7,15 @@
 // entry still has it (see the note on `/client` below). No unit test can catch
 // it -- only a real Next build across the RSC boundary.
 //
-// Imported from the `/client` subpath, NOT the package root. The root entry
-// re-exports RecaptchaWrapper without a "use client" directive, so importing
-// it here fails with `TypeError: (0 , h.useRef) is not a function`. That is
-// how this fixture found the defect on its first run. The root cannot simply
-// be marked "use client" either: it also re-exports ./server, which handles
-// RECAPTCHA_SECRET_KEY.
-import { RecaptchaWrapper } from "@silverassist/recaptcha/client";
+// Imported from the package ROOT — the barrel — on purpose.
+//
+// This is what aa-nextjs does, and what the DDD/barrel-export convention
+// prescribes. It used to fail here with
+// `TypeError: (0 , h.useRef) is not a function`, because the build inlined
+// ./client into the root bundle and flattened away its "use client"
+// directive. Keeping that module boundary external fixed it without
+// changing the public API.
+import { RecaptchaWrapper } from "@silverassist/recaptcha";
 
 // Google's public test key: always verifies, never rate-limits. The Cypress
 // specs stub the script anyway, so no test depends on reaching Google.
