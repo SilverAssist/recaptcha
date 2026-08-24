@@ -148,6 +148,9 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "overrides": {
+    "js-yaml": "^3.15.0"
+  },
   "allowScripts": {
     "cypress@15.21.0": true
   }
