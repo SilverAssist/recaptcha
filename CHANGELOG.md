@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-08-24
+
+### Fixed
+
+- **Two open Dependabot security alerts on dev-only transitive deps** — js-yaml 3.14.2 (via `@istanbuljs/load-nyc-config`): quadratic-complexity DoS, patched at 3.15.0 (overridden within the 3.x line to keep istanbul's `safeLoad` API intact); `@babel/core`: arbitrary file read via `sourceMappingURL`, resolved via `npm audit fix`. Neither is shipped in the published package.
+
 ## [0.3.0] - 2026-08-21
 
 ### Fixed
