@@ -122,14 +122,5 @@ declare global {
       ready: (callback: () => void) => void;
       execute: (siteKey: string, options: { action: string }) => Promise<string>;
     };
-    /** Flag to track if reCAPTCHA script has loaded */
-    __recaptchaLoaded?: boolean;
-    /** Flag to track if reCAPTCHA script is currently loading */
-    __recaptchaLoading?: boolean;
-    /** Callbacks to execute when script finishes loading */
-    __recaptchaCallbacks?: Array<{
-      onLoad: () => void;
-      onError: (error: Error) => void;
-    }>;
   }
 }
