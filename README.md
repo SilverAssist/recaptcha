@@ -447,3 +447,7 @@ import type {
 - [GitHub Repository](https://github.com/SilverAssist/recaptcha)
 - [npm Package](https://www.npmjs.com/package/@silverassist/recaptcha)
 - [Google reCAPTCHA v3 Documentation](https://developers.google.com/recaptcha/docs/v3)
+
+---
+
+Made with ❤️ by Silver Assist
