@@ -7,6 +7,11 @@
     // so every consumer must declare these itself.
     "outDir": "./dist",
     "rootDir": "./src",
+    // Also required, even though it isn't path-valued: extending a config
+    // from a different package resolves lib.*.d.ts inconsistently when that
+    // package's own typescript version differs from this one -- restating
+    // it is the confirmed fix.
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
