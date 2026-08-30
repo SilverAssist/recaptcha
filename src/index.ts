@@ -47,11 +47,7 @@
 export { RecaptchaWrapper } from "@silverassist/recaptcha/client";
 
 // Server exports
-export {
-  validateRecaptcha,
-  isRecaptchaEnabled,
-  getRecaptchaToken,
-} from "./server";
+export { validateRecaptcha, isRecaptchaEnabled, getRecaptchaToken } from "./server";
 
 // Type exports
 export type {

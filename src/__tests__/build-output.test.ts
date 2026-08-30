@@ -31,7 +31,7 @@ describeBuilt("built output: RSC boundary", () => {
     expect(root()).toContain("@silverassist/recaptcha/client");
   });
 
-  it('leaves the root barrel unmarked, since it also re-exports ./server', () => {
+  it("leaves the root barrel unmarked, since it also re-exports ./server", () => {
     // Marking the root "use client" would ship RECAPTCHA_SECRET_KEY handling
     // to the browser. The boundary belongs on ./client, not here.
     expect(root().startsWith('"use client"')).toBe(false);

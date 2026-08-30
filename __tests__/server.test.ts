@@ -2,11 +2,7 @@
  * Server-side validation tests
  */
 
-import {
-  validateRecaptcha,
-  isRecaptchaEnabled,
-  getRecaptchaToken,
-} from "../src/server";
+import { validateRecaptcha, isRecaptchaEnabled, getRecaptchaToken } from "../src/server";
 
 // Store original env
 const originalEnv = process.env;
@@ -221,7 +217,7 @@ describe("validateRecaptcha", () => {
       expect.objectContaining({
         method: "POST",
         body: expect.any(URLSearchParams),
-      })
+      }),
     );
   });
 });

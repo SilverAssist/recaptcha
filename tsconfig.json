@@ -1,24 +1,21 @@
 {
+  "extends": "@silverassist/npm-package-standards/tsconfig/react",
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    // rootDir/outDir/include/exclude are deliberately not in the shared base:
+    // TypeScript resolves path-valued compilerOptions in an extended config
+    // relative to *that config file's own location*, not the consumer's --
+    // so every consumer must declare these itself.
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    // Also required, even though it isn't path-valued: extending a config
+    // from a different package resolves lib.*.d.ts inconsistently when that
+    // package's own typescript version differs from this one -- restating
+    // it is the confirmed fix.
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
     // TS 6 no longer auto-includes @types/node the way TS 7 does; without this
     // `process` and the NodeJS namespace are unresolved in the client and
     // server entrypoints.

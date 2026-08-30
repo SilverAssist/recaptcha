@@ -24,7 +24,7 @@ import { RECAPTCHA_CONFIG } from "../constants";
 function loadRecaptchaScript(
   siteKey: string,
   onLoad: () => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
 ): void {
   // Already loaded
   if (typeof window !== "undefined" && window.__recaptchaLoaded) {
@@ -162,7 +162,7 @@ export function RecaptchaWrapper({
           if (!isMountedRef.current) {
             return false;
           }
-          
+
           if (typeof window !== "undefined" && window.grecaptcha) {
             return true;
           }
@@ -234,7 +234,7 @@ export function RecaptchaWrapper({
           observer.disconnect();
         }
       },
-      { rootMargin: lazyRootMargin }
+      { rootMargin: lazyRootMargin },
     );
 
     observer.observe(containerRef.current);
@@ -295,7 +295,7 @@ export function RecaptchaWrapper({
   // Track mounted state to prevent side effects after unmount
   useEffect(() => {
     isMountedRef.current = true;
-    
+
     return () => {
       isMountedRef.current = false;
     };
@@ -305,7 +305,7 @@ export function RecaptchaWrapper({
   if (!siteKey) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        "[reCAPTCHA] Site key not configured. Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY environment variable."
+        "[reCAPTCHA] Site key not configured. Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY environment variable.",
       );
     }
     return null;

@@ -109,12 +109,12 @@ import { submitForm } from "./actions"; // Your server action
 export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // ❌ Creating empty FormData - hidden reCAPTCHA input is NOT included!
     const formData = new FormData();
     formData.set("email", "user@example.com");
     formData.set("message", "Hello");
-    
+
     await submitForm(formData);
   };
 
@@ -140,10 +140,10 @@ import { submitForm } from "./actions"; // Your server action
 export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // ✅ Pass form element - captures ALL inputs including hidden reCAPTCHA token
     const formData = new FormData(e.currentTarget);
-    
+
     await submitForm(formData);
   };
 
@@ -169,14 +169,14 @@ import { submitForm } from "./actions"; // Your server action
 export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // ✅ Start with form element (includes hidden token)
     const formData = new FormData(e.currentTarget);
-    
+
     // Then add/override specific fields
     formData.set("customField", "customValue");
     formData.set("timestamp", Date.now().toString());
-    
+
     await submitForm(formData);
   };
 
@@ -199,11 +199,11 @@ The `lazy` prop enables lazy loading of the reCAPTCHA script, which defers loadi
 
 > **Note**: These metrics are approximate values measured on production websites using Google reCAPTCHA v3. Actual performance improvements will vary based on network conditions, device capabilities, and page complexity.
 
-| Metric | Without Lazy Loading | With Lazy Loading | Improvement |
-|--------|---------------------|-------------------|-------------|
-| **Initial JS** | 320KB+ | 0 KB (until visible) | -320KB |
-| **TBT (Total Blocking Time)** | ~470ms | ~0ms (deferred) | -470ms |
-| **TTI (Time to Interactive)** | +2-3s | Minimal impact | -2-3s |
+| Metric                        | Without Lazy Loading | With Lazy Loading    | Improvement |
+| ----------------------------- | -------------------- | -------------------- | ----------- |
+| **Initial JS**                | 320KB+               | 0 KB (until visible) | -320KB      |
+| **TBT (Total Blocking Time)** | ~470ms               | ~0ms (deferred)      | -470ms      |
+| **TTI (Time to Interactive)** | +2-3s                | Minimal impact       | -2-3s       |
 
 ### Basic Lazy Loading
 
@@ -264,10 +264,10 @@ export function MultiFormPage() {
     <>
       {/* First form triggers script load */}
       <RecaptchaWrapper action="newsletter" lazy />
-      
+
       {/* Second form reuses the same script */}
       <RecaptchaWrapper action="contact" lazy />
-      
+
       {/* Third form also reuses the script */}
       <RecaptchaWrapper action="feedback" lazy />
     </>
@@ -293,31 +293,31 @@ Client component that loads reCAPTCHA and generates tokens.
 
 ```tsx
 <RecaptchaWrapper
-  action="contact_form"      // Required: action name for analytics
+  action="contact_form" // Required: action name for analytics
   inputName="recaptchaToken" // Optional: hidden input name (default: "recaptchaToken")
-  inputId="recaptcha-token"  // Optional: hidden input id
-  siteKey="..."              // Optional: override env variable
-  refreshInterval={90000}    // Optional: token refresh interval in ms (default: 90000)
+  inputId="recaptcha-token" // Optional: hidden input id
+  siteKey="..." // Optional: override env variable
+  refreshInterval={90000} // Optional: token refresh interval in ms (default: 90000)
   onTokenGenerated={(token) => {}} // Optional: callback when token is generated
-  onError={(error) => {}}    // Optional: callback on error
-  lazy={false}               // Optional: enable lazy loading (default: false)
-  lazyRootMargin="200px"     // Optional: IntersectionObserver rootMargin (default: "200px")
+  onError={(error) => {}} // Optional: callback on error
+  lazy={false} // Optional: enable lazy loading (default: false)
+  lazyRootMargin="200px" // Optional: IntersectionObserver rootMargin (default: "200px")
 />
 ```
 
 #### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `action` | `string` | **Required** | Action name for reCAPTCHA analytics (e.g., "contact_form", "signup") |
-| `inputName` | `string` | `"recaptchaToken"` | Name attribute for the hidden input field |
-| `inputId` | `string` | `"recaptcha-token"` | ID attribute for the hidden input field |
-| `siteKey` | `string` | `process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Override the site key from environment variable |
-| `refreshInterval` | `number` | `90000` | Token refresh interval in milliseconds (90 seconds) |
-| `onTokenGenerated` | `(token: string) => void` | `undefined` | Callback invoked when a new token is generated |
-| `onError` | `(error: Error) => void` | `undefined` | Callback invoked when an error occurs |
-| `lazy` | `boolean` | `false` | Enable lazy loading to defer script until form is visible |
-| `lazyRootMargin` | `string` | `"200px"` | IntersectionObserver rootMargin (used when `lazy` is true) |
+| Prop               | Type                      | Default                                      | Description                                                          |
+| ------------------ | ------------------------- | -------------------------------------------- | -------------------------------------------------------------------- |
+| `action`           | `string`                  | **Required**                                 | Action name for reCAPTCHA analytics (e.g., "contact_form", "signup") |
+| `inputName`        | `string`                  | `"recaptchaToken"`                           | Name attribute for the hidden input field                            |
+| `inputId`          | `string`                  | `"recaptcha-token"`                          | ID attribute for the hidden input field                              |
+| `siteKey`          | `string`                  | `process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Override the site key from environment variable                      |
+| `refreshInterval`  | `number`                  | `90000`                                      | Token refresh interval in milliseconds (90 seconds)                  |
+| `onTokenGenerated` | `(token: string) => void` | `undefined`                                  | Callback invoked when a new token is generated                       |
+| `onError`          | `(error: Error) => void`  | `undefined`                                  | Callback invoked when an error occurs                                |
+| `lazy`             | `boolean`                 | `false`                                      | Enable lazy loading to defer script until form is visible            |
+| `lazyRootMargin`   | `string`                  | `"200px"`                                    | IntersectionObserver rootMargin (used when `lazy` is true)           |
 
 ### validateRecaptcha
 
@@ -325,13 +325,13 @@ Server-side token validation function.
 
 ```ts
 const result = await validateRecaptcha(
-  token,          // Token from form
+  token, // Token from form
   "contact_form", // Expected action (optional)
   {
     scoreThreshold: 0.5, // Minimum score (default: 0.5)
-    secretKey: "...",    // Override env variable
-    debug: true,         // Enable debug logging
-  }
+    secretKey: "...", // Override env variable
+    debug: true, // Enable debug logging
+  },
 );
 
 // Result type:
@@ -373,13 +373,13 @@ const token = getRecaptchaToken(formData, "customFieldName");
 
 reCAPTCHA v3 returns a score from 0.0 to 1.0:
 
-| Score | Meaning |
-|-------|---------|
-| 1.0 | Very likely human |
-| 0.7+ | Likely human |
-| 0.5 | Default threshold |
-| 0.3- | Suspicious |
-| 0.0 | Very likely bot |
+| Score | Meaning           |
+| ----- | ----------------- |
+| 1.0   | Very likely human |
+| 0.7+  | Likely human      |
+| 0.5   | Default threshold |
+| 0.3-  | Suspicious        |
+| 0.0   | Very likely bot   |
 
 Adjust threshold based on form sensitivity:
 
@@ -406,10 +406,17 @@ import { RecaptchaWrapper, validateRecaptcha } from "@silverassist/recaptcha";
 import { RecaptchaWrapper } from "@silverassist/recaptcha/client";
 
 // Server only
-import { validateRecaptcha, getRecaptchaToken, isRecaptchaEnabled } from "@silverassist/recaptcha/server";
+import {
+  validateRecaptcha,
+  getRecaptchaToken,
+  isRecaptchaEnabled,
+} from "@silverassist/recaptcha/server";
 
 // Types only
-import type { RecaptchaValidationResult, RecaptchaWrapperProps } from "@silverassist/recaptcha/types";
+import type {
+  RecaptchaValidationResult,
+  RecaptchaWrapperProps,
+} from "@silverassist/recaptcha/types";
 
 // Constants only
 import { DEFAULT_SCORE_THRESHOLD, RECAPTCHA_CONFIG } from "@silverassist/recaptcha/constants";
