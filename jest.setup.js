@@ -9,10 +9,7 @@ beforeAll(() => {
   jest.spyOn(console, "error").mockImplementation((...args) => {
     const message = args[0]?.toString?.() || "";
     // Suppress expected reCAPTCHA messages during tests
-    if (
-      message.includes("[reCAPTCHA]") ||
-      message.includes("not wrapped in act")
-    ) {
+    if (message.includes("[reCAPTCHA]") || message.includes("not wrapped in act")) {
       return;
     }
     originalConsoleError.apply(console, args);

@@ -52,7 +52,7 @@ import { RECAPTCHA_CONFIG, DEFAULT_SCORE_THRESHOLD } from "../constants";
 export async function validateRecaptcha(
   token: string | null | undefined,
   expectedAction?: string,
-  options: RecaptchaValidationOptions = {}
+  options: RecaptchaValidationOptions = {},
 ): Promise<RecaptchaValidationResult> {
   const {
     scoreThreshold = DEFAULT_SCORE_THRESHOLD,
@@ -63,9 +63,7 @@ export async function validateRecaptcha(
   // Check if reCAPTCHA is configured
   if (!secretKey) {
     if (debug) {
-      console.warn(
-        "[reCAPTCHA] Secret key not configured. Skipping validation."
-      );
+      console.warn("[reCAPTCHA] Secret key not configured. Skipping validation.");
     }
     return {
       success: true,
@@ -197,7 +195,7 @@ export function isRecaptchaEnabled(secretKey?: string): boolean {
  */
 export function getRecaptchaToken(
   formData: FormData,
-  fieldName: string = "recaptchaToken"
+  fieldName: string = "recaptchaToken",
 ): string | null {
   const token = formData.get(fieldName);
   return typeof token === "string" ? token : null;

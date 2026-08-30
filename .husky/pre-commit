@@ -37,6 +37,4 @@ for branch in $protected_branches; do
     fi
 done
 
-# No lint-staged: this repo has neither prettier nor eslint installed.
-# `lint` here is `tsc --noEmit`, which needs the whole program, so it belongs
-# in the pre-push gate rather than in a per-file staged run.
+npx lint-staged

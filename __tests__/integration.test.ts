@@ -2,11 +2,7 @@
  * Integration tests for complete form submission flow
  */
 
-import {
-  validateRecaptcha,
-  getRecaptchaToken,
-  isRecaptchaEnabled,
-} from "../src/server";
+import { validateRecaptcha, getRecaptchaToken, isRecaptchaEnabled } from "../src/server";
 
 // Store original env
 const originalEnv = process.env;
@@ -142,7 +138,7 @@ describe("Integration: Complete Form Submission Flow", () => {
 
     // Low-risk form (newsletter) - should pass with 0.3 threshold
     mockFetch.mockResolvedValueOnce(mockResponse);
-    let token = getRecaptchaToken(formData);
+    const token = getRecaptchaToken(formData);
     let result = await validateRecaptcha(token, "payment", {
       scoreThreshold: 0.3,
     });

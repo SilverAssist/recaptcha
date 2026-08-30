@@ -13,9 +13,9 @@ let simulateScriptError = false;
 jest.mock("next/script", () => {
   // Import act from react for use inside the mock
   const { act } = require("@testing-library/react");
-  
+
   return function Script({
-    src,
+    src: _src,
     onLoad,
     onError: scriptOnError,
   }: {
@@ -104,13 +104,7 @@ describe("RecaptchaWrapper", () => {
   it("should render hidden input with custom name and id", async () => {
     process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
 
-    render(
-      <RecaptchaWrapper
-        action="signup"
-        inputName="customToken"
-        inputId="custom-id"
-      />
-    );
+    render(<RecaptchaWrapper action="signup" inputName="customToken" inputId="custom-id" />);
 
     const input = screen.getByTestId("recaptcha-token-input");
     expect(input).toHaveAttribute("name", "customToken");
@@ -121,9 +115,7 @@ describe("RecaptchaWrapper", () => {
     process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
     const onTokenGenerated = jest.fn();
 
-    render(
-      <RecaptchaWrapper action="contact_form" onTokenGenerated={onTokenGenerated} />
-    );
+    render(<RecaptchaWrapper action="contact_form" onTokenGenerated={onTokenGenerated} />);
 
     await waitFor(() => {
       expect(onTokenGenerated).toHaveBeenCalledWith("mock-token");
@@ -167,7 +159,7 @@ describe("RecaptchaWrapper", () => {
       () => {
         expect(onError).toHaveBeenCalledWith(error);
       },
-      { timeout: 2000 }
+      { timeout: 2000 },
     );
   });
 
@@ -188,9 +180,7 @@ describe("RecaptchaWrapper", () => {
     process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
     const refreshInterval = 30000;
 
-    render(
-      <RecaptchaWrapper action="contact_form" refreshInterval={refreshInterval} />
-    );
+    render(<RecaptchaWrapper action="contact_form" refreshInterval={refreshInterval} />);
 
     // Initial call happens on mount
     await waitFor(() => {
@@ -270,14 +260,11 @@ describe("RecaptchaWrapper", () => {
         () =>
           new Promise((resolve) => {
             setTimeout(() => resolve("delayed-token"), 100);
-          })
+          }),
       );
 
       const { unmount } = render(
-        <RecaptchaWrapper
-          action="contact_form"
-          onTokenGenerated={onTokenGenerated}
-        />
+        <RecaptchaWrapper action="contact_form" onTokenGenerated={onTokenGenerated} />,
       );
 
       // Unmount while execute is pending
@@ -337,9 +324,7 @@ describe("RecaptchaWrapper", () => {
       expect(container.firstChild).toBeNull();
 
       // Warning should have been called (though suppressed by our setup)
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Site key not configured")
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Site key not configured"));
 
       // Restore NODE_ENV
       Object.defineProperty(process.env, "NODE_ENV", {
@@ -429,7 +414,7 @@ describe("RecaptchaWrapper", () => {
         expect(onError).toHaveBeenCalledWith(
           expect.objectContaining({
             message: "Failed to load reCAPTCHA script",
-          })
+          }),
         );
       });
     });
@@ -456,9 +441,7 @@ describe("RecaptchaWrapper", () => {
 
       // Set up a queued callback (simulating a lazy instance waiting)
       (window as any).__recaptchaLoading = true;
-      (window as any).__recaptchaCallbacks = [
-        { onLoad: jest.fn(), onError: queuedOnError },
-      ];
+      (window as any).__recaptchaCallbacks = [{ onLoad: jest.fn(), onError: queuedOnError }];
 
       // Enable script error simulation
       simulateScriptError = true;
@@ -469,7 +452,7 @@ describe("RecaptchaWrapper", () => {
         expect(queuedOnError).toHaveBeenCalledWith(
           expect.objectContaining({
             message: "Failed to load reCAPTCHA script",
-          })
+          }),
         );
       });
 
@@ -487,9 +470,7 @@ describe("RecaptchaWrapper", () => {
       // Mock IntersectionObserver
       mockObserve = jest.fn();
       mockDisconnect = jest.fn();
-      mockIntersectionObserver = jest.fn(function (
-        this: IntersectionObserver
-      ) {
+      mockIntersectionObserver = jest.fn(function (this: IntersectionObserver) {
         return {
           observe: mockObserve,
           disconnect: mockDisconnect,
@@ -559,27 +540,19 @@ describe("RecaptchaWrapper", () => {
 
       render(<RecaptchaWrapper action="contact_form" lazy />);
 
-      expect(mockIntersectionObserver).toHaveBeenCalledWith(
-        expect.any(Function),
-        { rootMargin: "200px" }
-      );
+      expect(mockIntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
+        rootMargin: "200px",
+      });
     });
 
     it("should set up IntersectionObserver with custom root margin", () => {
       process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
 
-      render(
-        <RecaptchaWrapper
-          action="contact_form"
-          lazy
-          lazyRootMargin="400px"
-        />
-      );
+      render(<RecaptchaWrapper action="contact_form" lazy lazyRootMargin="400px" />);
 
-      expect(mockIntersectionObserver).toHaveBeenCalledWith(
-        expect.any(Function),
-        { rootMargin: "400px" }
-      );
+      expect(mockIntersectionObserver).toHaveBeenCalledWith(expect.any(Function), {
+        rootMargin: "400px",
+      });
     });
 
     it("should load script when element becomes visible", async () => {
@@ -721,7 +694,7 @@ describe("RecaptchaWrapper", () => {
               action: "contact_form",
             });
           },
-          { timeout: 2500 }
+          { timeout: 2500 },
         );
       } finally {
         // Restore document.head.appendChild
@@ -758,17 +731,14 @@ describe("RecaptchaWrapper", () => {
       process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = "test-site-key";
 
       // Mock IntersectionObserver to auto-trigger intersection
-      let observerCallbacks: Array<IntersectionObserverCallback> = [];
+      const observerCallbacks: Array<IntersectionObserverCallback> = [];
       (global as any).IntersectionObserver = jest.fn(function (
         this: IntersectionObserver,
-        callback: IntersectionObserverCallback
+        callback: IntersectionObserverCallback,
       ) {
         observerCallbacks.push(callback);
         setTimeout(() => {
-          callback(
-            [{ isIntersecting: true } as IntersectionObserverEntry],
-            this
-          );
+          callback([{ isIntersecting: true } as IntersectionObserverEntry], this);
         }, 0);
         return {
           observe: jest.fn(),
@@ -789,7 +759,7 @@ describe("RecaptchaWrapper", () => {
           <RecaptchaWrapper action="form1" lazy />
           <RecaptchaWrapper action="form2" lazy />
           <RecaptchaWrapper action="form3" lazy />
-        </>
+        </>,
       );
 
       // Wait for script to load
@@ -799,7 +769,7 @@ describe("RecaptchaWrapper", () => {
 
       // Script should be appended only once
       const scriptCalls = appendChildSpy.mock.calls.filter(
-        (call) => (call[0] as Element).tagName === "SCRIPT"
+        (call) => (call[0] as Element).tagName === "SCRIPT",
       );
       expect(scriptCalls.length).toBe(1);
 
@@ -852,7 +822,7 @@ describe("RecaptchaWrapper", () => {
         expect(onError).toHaveBeenCalledWith(
           expect.objectContaining({
             message: "Failed to load reCAPTCHA script",
-          })
+          }),
         );
       });
 
@@ -902,7 +872,7 @@ describe("RecaptchaWrapper", () => {
 
       // Script should NOT be appended again
       const scriptCalls = appendChildSpy.mock.calls.filter(
-        (call) => (call[0] as Element).tagName === "SCRIPT"
+        (call) => (call[0] as Element).tagName === "SCRIPT",
       );
       expect(scriptCalls.length).toBe(0);
 
@@ -935,7 +905,7 @@ describe("RecaptchaWrapper", () => {
         <>
           <RecaptchaWrapper action="hero_form" />
           <RecaptchaWrapper action="footer_form" lazy />
-        </>
+        </>,
       );
 
       // Wait for non-lazy script to load (via Next.js Script)
@@ -959,7 +929,7 @@ describe("RecaptchaWrapper", () => {
 
       // Script should NOT be appended again (Next.js Script handles the first load)
       const scriptCalls = appendChildSpy.mock.calls.filter(
-        (call) => (call[0] as Element).tagName === "SCRIPT"
+        (call) => (call[0] as Element).tagName === "SCRIPT",
       );
       expect(scriptCalls.length).toBe(0);
 

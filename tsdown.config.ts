@@ -3,7 +3,14 @@ import { defineConfig } from "tsdown";
 // Migrated from tsup, which is no longer maintained ("This project is not
 // actively maintained anymore. Please consider using tsdown instead.") and
 // whose DTS build crashes on TypeScript 7. tsdown declares
-// `typescript: ^5 || ^6 || ^7`, so it unblocks the TypeScript 7 upgrade.
+// `typescript: ^5 || ^6 || ^7`, so it doesn't block a future TypeScript 7
+// upgrade the way tsup did.
+//
+// TypeScript itself is pinned to ^6.0.3 (not ^7) for now: typescript-eslint
+// refuses to run at all under TS 7 (a hard runtime check, not a soft peer
+// warning -- see typescript-eslint/typescript-eslint#10940), and adopting
+// real ESLint linting mattered more than the TS7 upgrade. Revisit once that
+// issue closes.
 export default defineConfig([
   // Client bundle — carries the "use client" directive.
   {

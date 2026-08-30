@@ -30,9 +30,7 @@ async function stubGoogleScript(page: import("@playwright/test").Page) {
   );
 }
 
-test("renders inside a Server Component page without a client-boundary error", async ({
-  page,
-}) => {
+test("renders inside a Server Component page without a client-boundary error", async ({ page }) => {
   await stubGoogleScript(page);
   await page.goto("/");
   // Were the "use client" directive missing from the built file, the page
@@ -41,18 +39,14 @@ test("renders inside a Server Component page without a client-boundary error", a
   await expect(page.getByTestId("protected-form")).toBeVisible();
 });
 
-test("requests Google's script with the configured site key", async ({
-  page,
-}) => {
+test("requests Google's script with the configured site key", async ({ page }) => {
   await stubGoogleScript(page);
   const request = page.waitForRequest(/recaptcha\/api\.js/);
   await page.goto("/");
   expect((await request).url()).toContain(SITE_KEY);
 });
 
-test("writes the token into the hidden input a Server Action reads", async ({
-  page,
-}) => {
+test("writes the token into the hidden input a Server Action reads", async ({ page }) => {
   // This is the regression osa-nextjs hit (WEB-901, then a hotfix disabling
   // reCAPTCHA outright "due to token issues"): the component mounted, the
   // script loaded, and the token still never reached the form field, so
@@ -64,9 +58,7 @@ test("writes the token into the hidden input a Server Action reads", async ({
   await expect(input).toHaveValue(STUB_TOKEN, { timeout: 10_000 });
 });
 
-test("keeps the token inside the form, so a submit carries it", async ({
-  page,
-}) => {
+test("keeps the token inside the form, so a submit carries it", async ({ page }) => {
   await stubGoogleScript(page);
   await page.goto("/");
   const insideForm = await page
