@@ -12,7 +12,7 @@
 
 "use client";
 
-import { ScriptLoader } from "@silverassist/script-loader";
+import { ScriptLoader } from "@silverassist/next-script-loader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RecaptchaWrapperProps } from "../types";
 import { RECAPTCHA_CONFIG } from "../constants";
@@ -31,7 +31,7 @@ export const recaptchaLoader = new ScriptLoader();
  * RecaptchaWrapper - Client component for reCAPTCHA v3 integration
  *
  * Features:
- * - Loads reCAPTCHA script automatically (via `@silverassist/script-loader`,
+ * - Loads reCAPTCHA script automatically (via `@silverassist/next-script-loader`,
  *   shared across every instance on the page)
  * - Generates token when script loads
  * - Refreshes token periodically (tokens expire after 2 minutes)

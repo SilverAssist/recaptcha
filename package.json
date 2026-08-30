@@ -130,7 +130,7 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "@silverassist/script-loader": "^0.1.0"
+    "@silverassist/next-script-loader": "^0.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
