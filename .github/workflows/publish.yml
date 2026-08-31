@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -14,7 +14,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7
-      
+
       - uses: actions/setup-node@v7
         with:
           # Node 24 ships npm 11.x; trusted publishing needs npm >= 11.5.1.
@@ -22,36 +22,49 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           # npm's trusted-publishing guide: never cache in release builds.
           package-manager-cache: false
-      
-      - run: npm ci
-      
-      - run: npm run lint
-      
-      - run: npm run build
-      
-      - run: npm test
-      
-      # Recorded so a publish failure can be diagnosed without a re-run.
-      - name: Report npm version
-        run: npm --version
 
-      # No NODE_AUTH_TOKEN: auth is the OIDC token above, exchanged against the
-      # trusted publisher registered for this package on npmjs.com.
-      - run: npm publish
-      
+      - run: npm ci
+
+      - run: npm run check
+
+      - run: npm run build
+
+      # Skips instead of failing when the version is already on the
+      # registry -- keeps a re-run (or a release cut after a manual
+      # publish) idempotent rather than erroring on a duplicate version.
+      - name: Check if this version is already published
+        id: version-check
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version >/dev/null 2>&1; then
+            echo "already-published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already-published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # No NODE_AUTH_TOKEN: auth is the OIDC token above, exchanged against
+      # the trusted publisher registered for this package on npmjs.com.
+      - if: steps.version-check.outputs.already-published == 'false'
+        run: npm publish --access public
+
       - name: Create summary
         if: success()
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          echo "## 📦 Package Published Successfully!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** \`$PACKAGE_VERSION\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
-          echo "- [View on npm](https://www.npmjs.com/package/@silverassist/recaptcha/v/$PACKAGE_VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [npm package page](https://www.npmjs.com/package/@silverassist/recaptcha)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📥 Install" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "npm install @silverassist/recaptcha@$PACKAGE_VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.version-check.outputs.already-published }}" = "true" ]; then
+            echo "## ⏭️ Version \`$PACKAGE_VERSION\` already published — skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 📦 Package Published Successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Version:** \`$PACKAGE_VERSION\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+            echo "- [View on npm](https://www.npmjs.com/package/@silverassist/recaptcha/v/$PACKAGE_VERSION)" >> $GITHUB_STEP_SUMMARY
+            echo "- [npm package page](https://www.npmjs.com/package/@silverassist/recaptcha)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📥 Install" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "npm install @silverassist/recaptcha@$PACKAGE_VERSION" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
