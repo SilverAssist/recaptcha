@@ -1,5 +1,5 @@
 /**
- * Integration specs for @silverassist/recaptcha consumed by a real Next app.
+ * Integration specs for `@silverassist/recaptcha` consumed by a real Next app.
  *
  * The fixture installs the *packed tarball*, so these run against exactly what
  * npm publishes -- not `src/`, not a workspace link. Three defects found in

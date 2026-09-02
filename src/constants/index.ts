@@ -1,11 +1,8 @@
 /**
- * @module @silverassist/recaptcha/constants
- * @description reCAPTCHA Configuration Constants - Default configuration values
+ * @packageDocumentation
+ * reCAPTCHA Configuration Constants - Default configuration values
  * for reCAPTCHA v3 integration.
  *
- * @author Miguel Colmenares <me@miguelcolmenares.com>
- * @license Polyform-Noncommercial-1.0.0
- * @version 0.2.1
  * @see {@link https://github.com/SilverAssist/recaptcha|GitHub Repository}
  */
 
