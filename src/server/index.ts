@@ -1,11 +1,8 @@
 /**
- * @module @silverassist/recaptcha/server
- * @description reCAPTCHA v3 Server-Side Validation - Functions for validating
+ * @packageDocumentation
+ * reCAPTCHA v3 Server-Side Validation - Functions for validating
  * reCAPTCHA tokens in Next.js Server Actions.
  *
- * @author Miguel Colmenares <me@miguelcolmenares.com>
- * @license Polyform-Noncommercial-1.0.0
- * @version 0.2.1
  * @see {@link https://developers.google.com/recaptcha/docs/verify|Google reCAPTCHA Verify Documentation}
  * @see {@link https://github.com/SilverAssist/recaptcha|GitHub Repository}
  */

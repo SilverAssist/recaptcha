@@ -1,11 +1,8 @@
 /**
- * @module @silverassist/recaptcha/types
- * @description reCAPTCHA v3 Integration Types - Type definitions for Google
+ * @packageDocumentation
+ * reCAPTCHA v3 Integration Types - Type definitions for Google
  * reCAPTCHA v3 integration with Next.js.
  *
- * @author Miguel Colmenares <me@miguelcolmenares.com>
- * @license Polyform-Noncommercial-1.0.0
- * @version 0.2.1
  * @see {@link https://github.com/SilverAssist/recaptcha|GitHub Repository}
  */
 
