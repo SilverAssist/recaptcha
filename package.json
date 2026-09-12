@@ -163,7 +163,10 @@
     "node": ">=22.0.0"
   },
   "overrides": {
-    "js-yaml": "^3.15.0"
+    "js-yaml": "^3.15.0",
+    "eslint-plugin-react": {
+      "eslint": "$eslint"
+    }
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs,json,md}": [
